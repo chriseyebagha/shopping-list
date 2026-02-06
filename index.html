@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Shopping List</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f4f6f8;
+    color: #1a1d24;
+    padding: 24px 16px 72px;
+    min-height: 100vh;
+  }
+
+  .header {
+    max-width: 660px;
+    margin: 0 auto 20px;
+    text-align: center;
+  }
+  .header h1 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #1a1d24;
+    line-height: 1.3;
+    margin-bottom: 6px;
+  }
+  .header h1 .highlight { color: #d4850f; }
+  .header p {
+    font-size: 0.88rem;
+    color: #5a6070;
+    line-height: 1.5;
+  }
+
+  /* Add item section */
+  .add-item-section {
+    max-width: 660px;
+    margin: 0 auto 16px;
+    background: #ffffff;
+    border: 2px solid #d4850f;
+    border-radius: 12px;
+    padding: 16px;
+  }
+  .add-item-section h3 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #1a1d24;
+    margin-bottom: 12px;
+  }
+  .add-item-form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .add-item-row {
+    display: flex;
+    gap: 8px;
+  }
+  .add-item-form input,
+  .add-item-form select {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
+    padding: 10px 12px;
+    border: 1px solid #e4e7ed;
+    border-radius: 8px;
+    background: #f9fafb;
+  }
+  .add-item-form input {
+    flex: 1;
+  }
+  .add-item-form select {
+    min-width: 140px;
+  }
+  .add-item-form input:focus,
+  .add-item-form select:focus {
+    outline: none;
+    border-color: #d4850f;
+    background: #fff;
+  }
+  .add-item-form button {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 600;
+    padding: 10px 20px;
+    background: #d4850f;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .add-item-form button:active {
+    transform: scale(0.98);
+  }
+
+  /* Active list section */
+  .active-list {
+    max-width: 660px;
+    margin: 0 auto 32px;
+  }
+  .active-list-empty {
+    background: #ffffff;
+    border: 1px solid #e4e7ed;
+    border-radius: 12px;
+    padding: 40px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #9a9fad;
+    font-size: 0.88rem;
+    font-style: italic;
+    text-align: center;
+  }
+
+  .store-group {
+    background: #ffffff;
+    border: 1px solid #e4e7ed;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  .store-group-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #f0f2f5;
+  }
+  .store-group-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+  .store-group-name {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1a1d24;
+  }
+
+  .divider {
+    max-width: 660px;
+    margin: 40px auto;
+    text-align: center;
+    position: relative;
+  }
+  .divider::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 1px;
+    background: #e0e3e8;
+  }
+  .divider span {
+    position: relative;
+    background: #f4f6f8;
+    padding: 0 16px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #7a8290;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .store-section {
+    max-width: 660px;
+    margin: 0 auto 28px;
+  }
+  .store-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e0e3e8;
+  }
+  .store-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    flex-shrink: 0;
+  }
+  .store-icon.pending { background: #ef4444; }
+  .store-icon.tjmaxx { background: #991b1b; }
+  .store-icon.costco { background: #003087; }
+  .store-icon.tj { background: #c1272d; }
+  .store-icon.home { background: #f97316; }
+  .store-icon.tools { background: #57534e; }
+  
+  .store-header h2 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1a1d24;
+  }
+  .store-header .item-count {
+    font-size: 0.78rem;
+    color: #7a8290;
+    margin-top: 2px;
+  }
+
+  .item {
+    background: #ffffff;
+    border: 1px solid #e4e7ed;
+    border-radius: 12px;
+    padding: 14px 14px;
+    margin-bottom: 8px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    transition: border-color 0.15s;
+  }
+  .item:hover { border-color: #c0c4cc; }
+
+  .item.active-item {
+    background: #fffbf0;
+    border-color: #f0d88a;
+  }
+
+  /* Hide default checkbox */
+  .item input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  /* Custom checkbox */
+  .checkmark {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    border: 2px solid #c8ccd5;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    transition: all 0.2s;
+  }
+
+  .checkmark svg {
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .item input[type="checkbox"]:checked ~ .checkmark {
+    background: #22c55e;
+    border-color: #22c55e;
+  }
+
+  .item input[type="checkbox"]:checked ~ .checkmark svg {
+    opacity: 1;
+  }
+
+  .item input[type="checkbox"]:checked ~ .item-label {
+    text-decoration: line-through;
+    color: #9a9fad;
+  }
+
+  .item input[type="checkbox"]:checked ~ .item-label,
+  .item input[type="checkbox"]:checked ~ .checkmark {
+    opacity: 0.4;
+  }
+
+  .item-label {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #1a1d24;
+    line-height: 1.4;
+    flex: 1;
+    cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  .item label {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    cursor: pointer;
+    flex: 1;
+  }
+
+  .delete-btn {
+    background: #fee;
+    border: 1px solid #fcc;
+    color: #c00;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .delete-btn:active {
+    transform: scale(0.95);
+  }
+
+  .action-buttons {
+    max-width: 660px;
+    margin: 20px auto 0;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .action-buttons button {
+    background: #ffffff;
+    border: 1px solid #e4e7ed;
+    border-radius: 10px;
+    padding: 12px 24px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #5a6070;
+    cursor: pointer;
+  }
+  .action-buttons button.danger {
+    color: #ef4444;
+  }
+  .action-buttons button:active {
+    transform: scale(0.98);
+  }
+
+  .suggestion-item {
+    opacity: 0.85;
+  }
+  .suggestion-item:hover {
+    opacity: 1;
+  }
+</style>
+<script>
+let activeList = [];
+
+// Store icon mapping
+const storeIcons = {
+  'TJ Maxx': { emoji: '🏬', color: '#991b1b' },
+  'Costco': { emoji: '🛒', color: '#003087' },
+  "Trader Joe's": { emoji: '🛒', color: '#c1272d' },
+  'Target': { emoji: '🎯', color: '#cc0000' },
+  'Whole Foods': { emoji: '🥬', color: '#00674f' },
+  'Safeway': { emoji: '🛒', color: '#e31837' },
+  'Amazon': { emoji: '📦', color: '#ff9900' },
+  'Home Depot': { emoji: '🔨', color: '#f96302' },
+  'IKEA': { emoji: '🪑', color: '#0058a3' },
+  'Hardware Store': { emoji: '🛠️', color: '#57534e' },
+  'General': { emoji: '🏠', color: '#f97316' }
+};
+
+function getStoreIcon(storeName) {
+  if (storeIcons[storeName]) {
+    return storeIcons[storeName];
+  }
+  // Use generic icon for any new store
+  return { emoji: '🛒', color: '#6b7280' };
+}
+
+function saveActiveList() {
+  localStorage.setItem('activeShoppingList', JSON.stringify(activeList));
+  localStorage.setItem('storeIcons', JSON.stringify(storeIcons));
+  renderActiveList();
+}
+
+function loadActiveList() {
+  const saved = localStorage.getItem('activeShoppingList');
+  if (saved) {
+    activeList = JSON.parse(saved);
+  }
+  const savedIcons = localStorage.getItem('storeIcons');
+  if (savedIcons) {
+    Object.assign(storeIcons, JSON.parse(savedIcons));
+  }
+  renderActiveList();
+}
+
+function addItemToActive(itemName, storeName) {
+  if (!itemName.trim() || !storeName.trim()) return;
+  activeList.push({ name: itemName.trim(), store: storeName.trim(), checked: false });
+  saveActiveList();
+}
+
+function removeItemFromActive(index) {
+  activeList.splice(index, 1);
+  saveActiveList();
+}
+
+function toggleItemInActive(index) {
+  activeList[index].checked = !activeList[index].checked;
+  saveActiveList();
+}
+
+function renderActiveList() {
+  const container = document.getElementById('activeListContainer');
+  
+  if (activeList.length === 0) {
+    container.innerHTML = '<div class="active-list-empty">Your list is empty. Add items above to get started.</div>';
+    return;
+  }
+  
+  // Group items by store
+  const byStore = {};
+  activeList.forEach((item, idx) => {
+    if (!byStore[item.store]) {
+      byStore[item.store] = [];
+    }
+    byStore[item.store].push({ ...item, index: idx });
+  });
+  
+  // Render each store group
+  let html = '<div class="active-list">';
+  Object.keys(byStore).sort().forEach(storeName => {
+    const icon = getStoreIcon(storeName);
+    html += `
+      <div class="store-group">
+        <div class="store-group-header">
+          <div class="store-group-icon" style="background: ${icon.color}">${icon.emoji}</div>
+          <div class="store-group-name">${storeName}</div>
+        </div>
+    `;
+    
+    byStore[storeName].forEach(item => {
+      html += `
+        <div class="item active-item">
+          <label>
+            <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleItemInActive(${item.index})"/>
+            <div class="checkmark"><svg viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6.5L5 9.5L10 3"/></svg></div>
+            <span class="item-label">${item.name}</span>
+          </label>
+          <button class="delete-btn" onclick="removeItemFromActive(${item.index})">Delete</button>
+        </div>
+      `;
+    });
+    
+    html += '</div>';
+  });
+  html += '</div>';
+  
+  container.innerHTML = html;
+}
+
+function clearChecked() {
+  activeList = activeList.filter(item => !item.checked);
+  saveActiveList();
+}
+
+function clearAll() {
+  if (confirm('Clear your entire shopping list?')) {
+    activeList = [];
+    saveActiveList();
+  }
+}
+
+window.addEventListener('DOMContentLoaded', function() {
+  loadActiveList();
+  
+  const addForm = document.getElementById('addItemForm');
+  const itemInput = document.getElementById('newItemInput');
+  const storeSelect = document.getElementById('storeSelect');
+  
+  addForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const itemText = itemInput.value.trim();
+    const storeName = storeSelect.value.trim();
+    if (itemText && storeName) {
+      addItemToActive(itemText, storeName);
+      itemInput.value = '';
+      itemInput.focus();
+    }
+  });
+  
+  // Allow custom store name
+  storeSelect.addEventListener('change', function() {
+    if (this.value === 'custom') {
+      const customStore = prompt('Enter store name:');
+      if (customStore && customStore.trim()) {
+        const option = document.createElement('option');
+        option.value = customStore.trim();
+        option.textContent = customStore.trim();
+        option.selected = true;
+        this.insertBefore(option, this.querySelector('option[value="custom"]'));
+      } else {
+        this.value = '';
+      }
+    }
+  });
+});
+
+// Helper function to add suggestion to active list
+function addSuggestion(name, store) {
+  addItemToActive(name, store);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Add touch support for mobile
+window.addEventListener('DOMContentLoaded', function() {
+  setTimeout(function() {
+    document.querySelectorAll('.suggestion-item').forEach(item => {
+      item.addEventListener('touchend', function(e) {
+        e.preventDefault();
+        const itemName = this.querySelector('.item-label').textContent;
+        const storeName = this.closest('.store-section').querySelector('h2').textContent;
+        addSuggestion(itemName, storeName);
+      });
+    });
+  }, 100);
+});
+</script>
+</head>
+<body>
+
+<div class="header">
+  <h1>Shopping <span class="highlight">List</span></h1>
+  <p>Add items for your next trip, or pick from suggestions below</p>
+</div>
+
+<!-- ADD ITEM SECTION -->
+<div class="add-item-section">
+  <h3>➕ Add Item</h3>
+  <form id="addItemForm" class="add-item-form">
+    <div class="add-item-row">
+      <input type="text" id="newItemInput" placeholder="Item name..." required/>
+      <select id="storeSelect" required>
+        <option value="">Store...</option>
+        <option value="TJ Maxx">TJ Maxx</option>
+        <option value="Costco">Costco</option>
+        <option value="Trader Joe's">Trader Joe's</option>
+        <option value="Target">Target</option>
+        <option value="Home Depot">Home Depot</option>
+        <option value="General">General</option>
+        <option value="custom">+ New Store...</option>
+      </select>
+    </div>
+    <button type="submit">Add to List</button>
+  </form>
+</div>
+
+<!-- ACTIVE LIST -->
+<div id="activeListContainer">
+  <div class="active-list empty">Your list is empty. Add items above to get started.</div>
+</div>
+
+<!-- ACTION BUTTONS -->
+<div class="action-buttons">
+  <button onclick="clearChecked()">Remove Checked Items</button>
+  <button class="danger" onclick="clearAll()">Clear Entire List</button>
+</div>
+
+<!-- DIVIDER -->
+<div class="divider">
+  <span>Suggested Items — Tap to add to your list</span>
+</div>
+
+<!-- NEW APARTMENT ESSENTIALS -->
+<div class="store-section">
+  <div class="store-header">
+    <div class="store-icon home">🏠</div>
+    <div>
+      <h2>Apartment Must-Haves</h2>
+      <div class="item-count">Critical "buy before you need" items</div>
+    </div>
+  </div>
+  <div class="item suggestion-item" onclick="addSuggestion('Plunger', 'General')">
+    <span class="item-label" style="cursor: pointer;">Plunger 🪠</span>
+  </div>
+  <div class="item suggestion-item" onclick="addSuggestion('Toilet Brush', 'General')">
+    <span class="item-label" style="cursor: pointer;">Toilet Brush</span>
+  </div>
+   <div class="item suggestion-item" onclick="addSuggestion('Shower Curtain & Liner', 'General')">
+    <span class="item-label" style="cursor: pointer;">Shower Curtain & Liner</span>
+  </div>
+  <div class="item suggestion-item" onclick="addSuggestion('First Aid Kit', 'General')">
+    <span class="item-label" style="cursor: pointer;">First Aid Kit 🩹</span>
+  </div>
+  <div class="item suggestion-item" onclick="addSuggestion('Flashlight & Batteries', 'General')">
+    <span class="item-label" style="cursor: pointer;">Flashlight & Batteries 🔦</span>
+  </div>
+  <div class="item suggestion-item" onclick="addSuggestion('Extension Cords / Power Strips', 'General')">
+    <span class="item-label" style="cursor: pointer;">Extension Cords / Power Strips</span>
+  </div>
+</div>
+
+<div class="store-section">
+  <div class="store-header">
+    <div class="store-icon tools">🛠️</div>
+    <div>
+      <h2>Tools & Cleaning</h2>
+      <div class="item-count">Assembly & Maintenance</div>
+    </div>
+  </div>
+  <div class="item suggestion-item" onclick="addSuggestion('Basic Tool Kit (Hammer, Screwdrivers, Tape)', 'Hardware Store')">
+    <span class="item-label" style="cursor: pointer;">Basic Tool Kit (Hammer, Screwdrivers, Tape)</span>
+  </div>
+  <div class="item suggestion-item" onclick="addSuggestion('Vacuum or Broom/Dustpan', 'Target')">
+    <span class="item-label" style="cursor: pointer;">Vacuum or Broom/Dustpan</span>
+  </div>
+  <div class="item suggestion-item" onclick="addSuggestion('Mop / Swiffer', 'Target')">
+    <span class="item-label" style="cursor: pointer;">Mop / Swiffer</span>
+  </div>
+  <div class="item suggestion-item" onclick="addSuggestion('All-Purpose Cleaner', 'Target')">
+    <span class="item-label" style="cursor: pointer;">All-Purpose Cleaner</span>
+  </div>
+</div>
+
+<!-- SUGGESTIONS: TJ MAXX -->
+<div class="store-section">
+  <div class="store-header">
+    <div class="store-icon tjmaxx">🏬</div>
+    <div>
+      <h2>TJ Maxx</h2>
+      <div class="item-count">Home goods section</div>
+    </div>
+  </div>
+  <div class="item suggestion-item" onclick="addSuggestion('Plates', this.closest('.store-section').querySelector('h2').textContent)">
+    <span class="item-label" style="cursor: pointer;">Plates</span>
+  </div>
+  <div class="item suggestion-item" onclick="addSuggestion('Spoons', this.closest('.store-section').querySelector('h2').textContent)">
+    <span class="item-label" style="cursor: pointer;">Spoons</span>
+  </div>
+  <div class="item suggestion-item" onclick="addSuggestion('Wine glass', this.closest('.store-section').querySelector('h2').textContent)">
+    <span class="item-label" style="cursor: pointer;">Wine glass</span>
+  </div>
+  <div class="item suggestion-item" onclick="addSuggestion('Trash bags', this.closest('.store-section').querySelector('h2').textContent)">
+    <span class="item-label" style="cursor: pointer;">Trash bags</span>
+  </div>
+  <div class="item suggestion-item" onclick="addSuggestion('Trash bin', this.closest('.store-section').querySelector('h2').textContent)">
+    <span class="item-label" style="cursor: pointer;">Trash bin</span>
+  </div>
+  <div class="item suggestion-item" onclick="addSuggestion('Cups', this.closest('.store-section').querySelector('h2').textContent)">
+    <span class="item-label" style="cursor: pointer;">Cups</span>
+  </div>
+  <div class="item suggestion-item" onclick="addSuggestion('Rain Jacket', this.closest('.store-section').querySelector('h2').textContent)">
+    <span class="item-label" style="cursor: pointer;">Rain Jacket</span>
+  </div>
+  <div class="item suggestion-item" onclick="addSuggestion('Chef\'s Knife', this.closest('.store-section').querySelector('h2').textContent)">
+    <span class="item-label" style="cursor: pointer;">Chef's Knife 🔪</span>
+  </div>
+  <div class="item suggestion-item" onclick="addSuggestion('Cutting Board', this.closest('.store-section').querySelector('h2').textContent)">
+    <span class="item-label" style="cursor: pointer;">Cutting Board</span>
+  </div>
+  <div class="item suggestion-item" onclick="addSuggestion('Can opener', this.closest('.store-section').querySelector('h2').textContent)">
+    <span class="item-label" style="cursor: pointer;">Can opener</span>
+  </div>
+  <div class="item suggestion-item" onclick="addSuggestion('Wine opener', this.closest('.store-section').querySelector('h2').textContent)">
+    <span class="item-label" style="cursor: pointer;">Wine opener</span>
+  </div>
+  <div class="item suggestion-item" onclick="addSuggestion('Oven mitts', this.closest('.store-section').querySelector('h2').textContent)">
+    <span class="item-label" style="cursor: pointer;">Oven mitts</span>
+  </div>
+  <div class="item suggestion-item" onclick="addSuggestion('Tupperware', this.closest('.store-section').querySelector('h2').textContent)">
+    <span class="item-label" style="cursor: pointer;">Tupperware</span>
+  </div>
+  <div class="item suggestion-item" onclick="addSuggestion('Bath mat', this.closest('.store-section').querySelector('h2').textContent)">
+    <span class="item-label" style="cursor: pointer;">Bath mat</span>
+  </div>
+  <div class="item suggestion-item" onclick="addSuggestion('Hand towels', this.closest('.store-section').querySelector('h2').textContent)">
+    <span class="item-label" style="cursor: pointer;">Hand towels</span>
+  </div>
+  <div class="item suggestion-item" onclick="addSuggestion('Bathing sponge', this.closest('.store-section').querySelector('h2').textContent)">
+    <span class="item-label" style="cursor: pointer;">Bathing sponge</span>
+  </div>
+  <div class="item suggestion-item" onclick="addSuggestion('Laundry hamper', this.closest('.store-section').querySelector('h2').textContent)">
+    <span class="item-label" style="cursor: pointer;">Laundry hamper</span>
+  </div>
+  <div class="item suggestion-item" onclick="addSuggestion('Hangers', this.closest('.store-section').querySelector('h2').textContent)">
+    <span class="item-label" style="cursor: pointer;">Hangers (Pack)</span>
+  </div>
+</div>
+
+<!-- SUGGESTIONS: COSTCO -->
+<div class="store-section">
+  <div class="store-header">
+    <div class="store-icon costco">🛒</div>
+    <div>
+      <h2>Costco</h2>
+      <div class="item-count">Bulk essentials + frozen proteins</div>
+    </div>
+  </div>
+  <div class="item suggestion-item" onclick="addSuggestion('Toilet paper', this.closest('.store-section').querySelector('h2').textContent)">
+    <span class="item-label" style="cursor: pointer;">Toilet paper</span>
+  </div>
+  <div class="item suggestion-item" onclick="addSuggestion('Paper towels', this.closest('.store-section').querySelector('h2').textContent)">
+    <span class="item-label" style="cursor: pointer;">Paper towels</span>
+  </div>
+  <div class="item suggestion-item" onclick="addSuggestion('Kitchen napkin', this.closest('.store-section').querySelector('h2').textContent)">
+    <span class="item-label" style="cursor: pointer;">Kitchen napkin</span>
+  </div>
+  <div class="item suggestion-item" onclick="addSuggestion('Coco water', this.closest('.store-section').querySelector('h2').textContent)">
+    <span class="item-label" style="cursor: pointer;">Coco water</span>
+  </div>
+  <div class="item suggestion-item" onclick="addSuggestion('Celsius', this.closest('.store-section').querySelector('h2').textContent)">
+    <span class="item-label" style="cursor: pointer;">Celsius</span>
+  </div>
+  <div class="item suggestion-item" onclick="addSuggestion('Laundry detergent', this.closest('.store-section').querySelector('h2').textContent)">
+    <span class="item-label" style="cursor: pointer;">Laundry detergent</span>
+  </div>
+  <div class="item suggestion-item" onclick="addSuggestion('Dish Soap & Sponges', this.closest('.store-section').querySelector('h2').textContent)">
+    <span class="item-label" style="cursor: pointer;">Dish Soap & Sponges</span>
+  </div>
+  <div class="item suggestion-item" onclick="addSuggestion('Kirkland Grilled Chicken Breast Skewers', this.closest('.store-section').querySelector('h2').textContent)">
+    <span class="item-label" style="cursor: pointer;">Kirkland Grilled Chicken Breast Skewers</span>
+  </div>
+  <div class="item suggestion-item" onclick="addSuggestion('Kirkland Wild Alaskan Sockeye Salmon', this.closest('.store-section').querySelector('h2').textContent)">
+    <span class="item-label" style="cursor: pointer;">Kirkland Wild Alaskan Sockeye Salmon</span>
+  </div>
+  <div class="item suggestion-item" onclick="addSuggestion('Kahiki Chicken Rice Bowls — Teriyaki', this.closest('.store-section').querySelector('h2').textContent)">
+    <span class="item-label" style="cursor: pointer;">Kahiki Chicken Rice Bowls — Teriyaki</span>
+  </div>
+  <div class="item suggestion-item" onclick="addSuggestion('Kirkland Rotisserie Chicken', this.closest('.store-section').querySelector('h2').textContent)">
+    <span class="item-label" style="cursor: pointer;">Kirkland Rotisserie Chicken</span>
+  </div>
+  <div class="item suggestion-item" onclick="addSuggestion('Bibigo Beef Pho Steamed Dumplings', this.closest('.store-section').querySelector('h2').textContent)">
+    <span class="item-label" style="cursor: pointer;">Bibigo Beef Pho Steamed Dumplings</span>
+  </div>
+  <div class="item suggestion-item" onclick="addSuggestion('Kirkland Boneless Chicken Breasts (frozen)', this.closest('.store-section').querySelector('h2').textContent)">
+    <span class="item-label" style="cursor: pointer;">Kirkland Boneless Chicken Breasts (frozen)</span>
+  </div>
+</div>
+
+<!-- SUGGESTIONS: TRADER JOE'S -->
+<div class="store-section">
+  <div class="store-header">
+    <div class="store-icon tj">🛒</div>
+    <div>
+      <h2>Trader Joe's</h2>
+      <div class="item-count">Pantry staples + proteins</div>
+    </div>
+  </div>
+  <div class="item suggestion-item" onclick="addSuggestion('Eggs', this.closest('.store-section').querySelector('h2').textContent)">
+    <span class="item-label" style="cursor: pointer;">Eggs</span>
+  </div>
+  <div class="item suggestion-item" onclick="addSuggestion('Butter', this.closest('.store-section').querySelector('h2').textContent)">
+    <span class="item-label" style="cursor: pointer;">Butter</span>
+  </div>
+  <div class="item suggestion-item" onclick="addSuggestion('Olive oil', this.closest('.store-section').querySelector('h2').textContent)">
+    <span class="item-label" style="cursor: pointer;">Olive oil</span>
+  </div>
+  <div class="item suggestion-item" onclick="addSuggestion('Salt', this.closest('.store-section').querySelector('h2').textContent)">
+    <span class="item-label" style="cursor: pointer;">Salt</span>
+  </div>
+  <div class="item suggestion-item" onclick="addSuggestion('Pepper', this.closest('.store-section').querySelector('h2').textContent)">
+    <span class="item-label" style="cursor: pointer;">Pepper</span>
+  </div>
+  <div class="item suggestion-item" onclick="addSuggestion('Branzino Fish', this.closest('.store-section').querySelector('h2').textContent)">
+    <span class="item-label" style="cursor: pointer;">Branzino Fish</span>
+  </div>
+  <div class="item suggestion-item" onclick="addSuggestion('Tikka Masala', this.closest('.store-section').querySelector('h2').textContent)">
+    <span class="item-label" style="cursor: pointer;">Tikka Masala</span>
+  </div>
+  <div class="item suggestion-item" onclick="addSuggestion('Argentinian Red Shrimp — Ginger Garlic Butter', this.closest('.store-section').querySelector('h2').textContent)">
+    <span class="item-label" style="cursor: pointer;">Argentinian Red Shrimp — Ginger Garlic Butter</span>
+  </div>
+  <div class="item suggestion-item" onclick="addSuggestion('Wild Raw Argentinian Red Shrimp (1 lb bag)', this.closest('.store-section').querySelector('h2').textContent)">
+    <span class="item-label" style="cursor: pointer;">Wild Raw Argentinian Red Shrimp (1 lb bag)</span>
+  </div>
+  <div class="item suggestion-item" onclick="addSuggestion('Pulled Chicken Salsa Verde', this.closest('.store-section').querySelector('h2').textContent)">
+    <span class="item-label" style="cursor: pointer;">Pulled Chicken Salsa Verde</span>
+  </div>
+  <div class="item suggestion-item" onclick="addSuggestion('Pre-Cooked Grilled Chicken Strips', this.closest('.store-section').querySelector('h2').textContent)">
+    <span class="item-label" style="cursor: pointer;">Pre-Cooked Grilled Chicken Strips</span>
+  </div>
+  <div class="item suggestion-item" onclick="addSuggestion('Bacon Cheddar Egg Bites', this.closest('.store-section').querySelector('h2').textContent)">
+    <span class="item-label" style="cursor: pointer;">Bacon Cheddar Egg Bites</span>
+  </div>
+</div>
+
+</body>
+</html>
