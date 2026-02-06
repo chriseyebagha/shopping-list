@@ -347,7 +347,75 @@
   }
 </style>
 <script>
+// --- INITIAL DATA SEEDING ---
+// This list is used only if the user has NO suggestion history.
+// It gives them a good starting point.
+const INITIAL_SEED_DATA = [
+  // Apartment Essentials
+  { name: 'Plunger 🪠', store: 'General', count: 10 },
+  { name: 'Toilet Brush', store: 'General', count: 9 },
+  { name: 'Shower Curtain & Liner', store: 'General', count: 9 },
+  { name: 'First Aid Kit 🩹', store: 'General', count: 8 },
+  { name: 'Flashlight & Batteries 🔦', store: 'General', count: 8 },
+  { name: 'Extension Cords / Power Strips', store: 'General', count: 8 },
+  { name: 'Basic Tool Kit (Hammer, Screwdrivers)', store: 'Hardware Store', count: 8 },
+  { name: 'Vacuum or Broom/Dustpan', store: 'Target', count: 8 },
+  { name: 'Mop / Swiffer', store: 'Target', count: 8 },
+  { name: 'All-Purpose Cleaner', store: 'Target', count: 10 },
+
+  // TJ Maxx
+  { name: 'Plates', store: 'TJ Maxx', count: 5 },
+  { name: 'Spoons', store: 'TJ Maxx', count: 5 },
+  { name: 'Wine glass', store: 'TJ Maxx', count: 3 },
+  { name: 'Trash bags', store: 'TJ Maxx', count: 10 },
+  { name: 'Trash bin', store: 'TJ Maxx', count: 2 },
+  { name: 'Cups', store: 'TJ Maxx', count: 5 },
+  { name: 'Rain Jacket', store: 'TJ Maxx', count: 1 },
+  { name: "Chef's Knife 🔪", store: 'TJ Maxx', count: 6 },
+  { name: 'Cutting Board', store: 'TJ Maxx', count: 6 },
+  { name: 'Can opener', store: 'TJ Maxx', count: 4 },
+  { name: 'Wine opener', store: 'TJ Maxx', count: 2 },
+  { name: 'Oven mitts', store: 'TJ Maxx', count: 3 },
+  { name: 'Tupperware', store: 'TJ Maxx', count: 8 },
+  { name: 'Bath mat', store: 'TJ Maxx', count: 2 },
+  { name: 'Hand towels', store: 'TJ Maxx', count: 5 },
+  { name: 'Bathing sponge', store: 'TJ Maxx', count: 6 },
+  { name: 'Laundry hamper', store: 'TJ Maxx', count: 2 },
+  { name: 'Hangers (Pack)', store: 'TJ Maxx', count: 4 },
+
+  // Costco
+  { name: 'Toilet paper', store: 'Costco', count: 20 },
+  { name: 'Paper towels', store: 'Costco', count: 18 },
+  { name: 'Kitchen napkin', store: 'Costco', count: 12 },
+  { name: 'Coco water', store: 'Costco', count: 10 },
+  { name: 'Celsius', store: 'Costco', count: 15 },
+  { name: 'Laundry detergent', store: 'Costco', count: 12 },
+  { name: 'Dish Soap & Sponges', store: 'Costco', count: 14 },
+  { name: 'Kirkland Grilled Chicken Breast Skewers', store: 'Costco', count: 15 },
+  { name: 'Kirkland Wild Alaskan Sockeye Salmon', store: 'Costco', count: 12 },
+  { name: 'Kahiki Chicken Rice Bowls — Teriyaki', store: 'Costco', count: 8 },
+  { name: 'Kirkland Rotisserie Chicken', store: 'Costco', count: 25 },
+  { name: 'Bibigo Beef Pho Steamed Dumplings', store: 'Costco', count: 10 },
+  { name: 'Kirkland Boneless Chicken Breasts (frozen)', store: 'Costco', count: 15 },
+
+  // Trader Joe's
+  { name: 'Eggs', store: "Trader Joe's", count: 30 },
+  { name: 'Butter', store: "Trader Joe's", count: 15 },
+  { name: 'Olive oil', store: "Trader Joe's", count: 8 },
+  { name: 'Salt', store: "Trader Joe's", count: 5 },
+  { name: 'Pepper', store: "Trader Joe's", count: 5 },
+  { name: 'Branzino Fish', store: "Trader Joe's", count: 10 },
+  { name: 'Tikka Masala', store: "Trader Joe's", count: 12 },
+  { name: 'Argentinian Red Shrimp', store: "Trader Joe's", count: 10 },
+  { name: 'Wild Raw Argentinian Red Shrimp (1 lb)', store: "Trader Joe's", count: 10 },
+  { name: 'Pulled Chicken Salsa Verde', store: "Trader Joe's", count: 12 },
+  { name: 'Pre-Cooked Grilled Chicken Strips', store: "Trader Joe's", count: 15 },
+  { name: 'Bacon Cheddar Egg Bites', store: "Trader Joe's", count: 14 }
+];
+
+// --- APP STATE ---
 let activeList = [];
+let suggestionDB = {}; // format: { "Item Name": { store: "Costco", count: 5, lastUsed: 123456789 } }
 
 // Store icon mapping
 const storeIcons = {
@@ -365,45 +433,114 @@ const storeIcons = {
 };
 
 function getStoreIcon(storeName) {
-  if (storeIcons[storeName]) {
-    return storeIcons[storeName];
-  }
-  // Use generic icon for any new store
+  if (storeIcons[storeName]) return storeIcons[storeName];
   return { emoji: '🛒', color: '#6b7280' };
 }
 
-function saveActiveList() {
+// --- PERSISTENCE ---
+function saveAppState() {
   localStorage.setItem('activeShoppingList', JSON.stringify(activeList));
+  localStorage.setItem('shoppingListSuggestionsDB', JSON.stringify(suggestionDB));
   localStorage.setItem('storeIcons', JSON.stringify(storeIcons));
-  renderActiveList();
 }
 
-function loadActiveList() {
-  const saved = localStorage.getItem('activeShoppingList');
-  if (saved) {
-    activeList = JSON.parse(saved);
-  }
+function loadAppState() {
+  // Load Active List
+  const savedActive = localStorage.getItem('activeShoppingList');
+  if (savedActive) activeList = JSON.parse(savedActive);
+
+  // Load Icons
   const savedIcons = localStorage.getItem('storeIcons');
-  if (savedIcons) {
-    Object.assign(storeIcons, JSON.parse(savedIcons));
+  if (savedIcons) Object.assign(storeIcons, JSON.parse(savedIcons));
+
+  // Load Suggestions
+  const savedDB = localStorage.getItem('shoppingListSuggestionsDB');
+  if (savedDB) {
+    suggestionDB = JSON.parse(savedDB);
+  } else {
+    // SEED DB if empty
+    seedDatabase();
   }
+}
+
+function seedDatabase() {
+  const now = Date.now();
+  INITIAL_SEED_DATA.forEach(item => {
+    suggestionDB[item.name] = {
+      store: item.store,
+      count: item.count,
+      lastUsed: now
+    };
+  });
+  saveAppState();
+}
+
+// --- LOGIC ---
+
+function addItem(itemName, storeName) {
+  if (!itemName.trim() || !storeName.trim()) return;
+  itemName = itemName.trim();
+  storeName = storeName.trim();
+
+  // 1. Add to Active List
+  activeList.push({ name: itemName, store: storeName, checked: false });
+
+  // 2. Update Knowledge Base (Smart Learning)
+  updateItemStats(itemName, storeName);
+
+  saveAppState();
+  renderAll();
+}
+
+function updateItemStats(itemName, storeName) {
+  if (!suggestionDB[itemName]) {
+    // New item learned!
+    suggestionDB[itemName] = {
+      store: storeName,
+      count: 1,
+      lastUsed: Date.now()
+    };
+  } else {
+    // Existing item reinforced
+    suggestionDB[itemName].count++;
+    suggestionDB[itemName].lastUsed = Date.now();
+    // Update store if they changed it, or keep old? Let's update it to latest preference.
+    suggestionDB[itemName].store = storeName;
+  }
+}
+
+function removeItem(index) {
+  activeList.splice(index, 1);
+  saveAppState();
+  renderActiveList(); // No need to re-render suggestions
+}
+
+function toggleItem(index) {
+  activeList[index].checked = !activeList[index].checked;
+  saveAppState();
+  // Optional: Checking an item could also boost its stats? 
+  // For now, only ADDING boosts stats to keep it simple.
+}
+
+function clearChecked() {
+  activeList = activeList.filter(item => !item.checked);
+  saveAppState();
   renderActiveList();
 }
 
-function addItemToActive(itemName, storeName) {
-  if (!itemName.trim() || !storeName.trim()) return;
-  activeList.push({ name: itemName.trim(), store: storeName.trim(), checked: false });
-  saveActiveList();
+function clearAll() {
+  if (confirm('Clear your entire shopping list?')) {
+    activeList = [];
+    saveAppState();
+    renderActiveList();
+  }
 }
 
-function removeItemFromActive(index) {
-  activeList.splice(index, 1);
-  saveActiveList();
-}
+// --- RENDERING ---
 
-function toggleItemInActive(index) {
-  activeList[index].checked = !activeList[index].checked;
-  saveActiveList();
+function renderAll() {
+  renderActiveList();
+  renderSuggestions();
 }
 
 function renderActiveList() {
@@ -417,13 +554,10 @@ function renderActiveList() {
   // Group items by store
   const byStore = {};
   activeList.forEach((item, idx) => {
-    if (!byStore[item.store]) {
-      byStore[item.store] = [];
-    }
+    if (!byStore[item.store]) byStore[item.store] = [];
     byStore[item.store].push({ ...item, index: idx });
   });
   
-  // Render each store group
   let html = '<div class="active-list">';
   Object.keys(byStore).sort().forEach(storeName => {
     const icon = getStoreIcon(storeName);
@@ -439,15 +573,14 @@ function renderActiveList() {
       html += `
         <div class="item active-item">
           <label>
-            <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleItemInActive(${item.index})"/>
+            <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleItem(${item.index})"/>
             <div class="checkmark"><svg viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6.5L5 9.5L10 3"/></svg></div>
             <span class="item-label">${item.name}</span>
           </label>
-          <button class="delete-btn" onclick="removeItemFromActive(${item.index})">Delete</button>
+          <button class="delete-btn" onclick="removeItem(${item.index})">Delete</button>
         </div>
       `;
     });
-    
     html += '</div>';
   });
   html += '</div>';
@@ -455,20 +588,86 @@ function renderActiveList() {
   container.innerHTML = html;
 }
 
-function clearChecked() {
-  activeList = activeList.filter(item => !item.checked);
-  saveActiveList();
+function renderSuggestions() {
+  const container = document.getElementById('suggestionsContainer');
+  
+  // 1. Check if items are already in active list (to hide them)
+  const activeNames = new Set(activeList.map(i => i.name));
+
+  // 2. Convert DB to Array
+  let candidates = Object.entries(suggestionDB).map(([name, data]) => ({
+    name: name,
+    ...data
+  }));
+
+  // 3. Filter out things already in the list
+  candidates = candidates.filter(item => !activeNames.has(item.name));
+
+  // 4. SORT ALGORITHM
+  // Priority 1: High Count (Frequency)
+  // Priority 2: Recency (Last Used)
+  candidates.sort((a, b) => {
+    if (b.count !== a.count) return b.count - a.count;
+    return b.lastUsed - a.lastUsed;
+  });
+
+  // 5. Limit to Top 50
+  const topSuggestions = candidates.slice(0, 50);
+
+  if (topSuggestions.length === 0) {
+    container.innerHTML = '<div style="text-align:center; color:#999; padding:20px;">No suggestions available yet.</div>';
+    return;
+  }
+
+  // 6. Group by Store
+  const byStore = {};
+  topSuggestions.forEach(item => {
+    if (!byStore[item.store]) byStore[item.store] = [];
+    byStore[item.store].push(item);
+  });
+
+  // 7. Render
+  let html = '';
+  Object.keys(byStore).sort().forEach(storeName => {
+    const icon = getStoreIcon(storeName);
+    html += `
+      <div class="store-section">
+        <div class="store-header">
+          <div class="store-icon" style="background: ${icon.color}">${icon.emoji}</div>
+          <div>
+            <h2>${storeName}</h2>
+            <div class="item-count">Suggested</div>
+          </div>
+        </div>
+    `;
+    
+    byStore[storeName].forEach(item => {
+      // Escape single quotes for the onclick handler
+      const escapedName = item.name.replace(/'/g, "\\'");
+      const escapedStore = item.store.replace(/'/g, "\\'");
+      
+      html += `
+        <div class="item suggestion-item" onclick="addSuggestion('${escapedName}', '${escapedStore}')">
+          <span class="item-label" style="cursor: pointer;">${item.name}</span>
+        </div>
+      `;
+    });
+    html += '</div>';
+  });
+
+  container.innerHTML = html;
 }
 
-function clearAll() {
-  if (confirm('Clear your entire shopping list?')) {
-    activeList = [];
-    saveActiveList();
-  }
+// --- EVENT HANDLERS ---
+
+function addSuggestion(name, store) {
+  addItem(name, store);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 window.addEventListener('DOMContentLoaded', function() {
-  loadActiveList();
+  loadAppState();
+  renderAll();
   
   const addForm = document.getElementById('addItemForm');
   const itemInput = document.getElementById('newItemInput');
@@ -476,16 +675,12 @@ window.addEventListener('DOMContentLoaded', function() {
   
   addForm.addEventListener('submit', function(e) {
     e.preventDefault();
-    const itemText = itemInput.value.trim();
-    const storeName = storeSelect.value.trim();
-    if (itemText && storeName) {
-      addItemToActive(itemText, storeName);
-      itemInput.value = '';
-      itemInput.focus();
-    }
+    addItem(itemInput.value, storeSelect.value);
+    itemInput.value = '';
+    itemInput.focus();
   });
   
-  // Allow custom store name
+  // Custom store handler
   storeSelect.addEventListener('change', function() {
     if (this.value === 'custom') {
       const customStore = prompt('Enter store name:');
@@ -495,31 +690,30 @@ window.addEventListener('DOMContentLoaded', function() {
         option.textContent = customStore.trim();
         option.selected = true;
         this.insertBefore(option, this.querySelector('option[value="custom"]'));
+        
+        // Save new store icon color if needed (random/default for now)
+        if (!storeIcons[customStore.trim()]) {
+          storeIcons[customStore.trim()] = { emoji: '🛍️', color: '#6b7280' };
+        }
       } else {
         this.value = '';
       }
     }
   });
-});
 
-// Helper function to add suggestion to active list
-function addSuggestion(name, store) {
-  addItemToActive(name, store);
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-// Add touch support for mobile
-window.addEventListener('DOMContentLoaded', function() {
-  setTimeout(function() {
-    document.querySelectorAll('.suggestion-item').forEach(item => {
-      item.addEventListener('touchend', function(e) {
+  // Touch support for mobile suggestions
+  setTimeout(() => {
+    const container = document.getElementById('suggestionsContainer');
+    container.addEventListener('touchend', function(e) {
+      // Delegate touch event
+      const itemRow = e.target.closest('.suggestion-item');
+      if (itemRow) {
         e.preventDefault();
-        const itemName = this.querySelector('.item-label').textContent;
-        const storeName = this.closest('.store-section').querySelector('h2').textContent;
-        addSuggestion(itemName, storeName);
-      });
+        // Trigger the click logic
+        itemRow.click();
+      }
     });
-  }, 100);
+  }, 500);
 });
 </script>
 </head>
@@ -527,7 +721,7 @@ window.addEventListener('DOMContentLoaded', function() {
 
 <div class="header">
   <h1>Shopping <span class="highlight">List</span></h1>
-  <p>Add items for your next trip, or pick from suggestions below</p>
+  <p>Add items or pick from your most frequent purchases below</p>
 </div>
 
 <!-- ADD ITEM SECTION -->
@@ -543,6 +737,7 @@ window.addEventListener('DOMContentLoaded', function() {
         <option value="Trader Joe's">Trader Joe's</option>
         <option value="Target">Target</option>
         <option value="Home Depot">Home Depot</option>
+        <option value="Hardware Store">Hardware Store</option>
         <option value="General">General</option>
         <option value="custom">+ New Store...</option>
       </select>
@@ -553,7 +748,7 @@ window.addEventListener('DOMContentLoaded', function() {
 
 <!-- ACTIVE LIST -->
 <div id="activeListContainer">
-  <div class="active-list empty">Your list is empty. Add items above to get started.</div>
+  <!-- Filled by Javascript -->
 </div>
 
 <!-- ACTION BUTTONS -->
@@ -564,220 +759,13 @@ window.addEventListener('DOMContentLoaded', function() {
 
 <!-- DIVIDER -->
 <div class="divider">
-  <span>Suggested Items — Tap to add to your list</span>
+  <span>Suggested Items (Top 50)</span>
 </div>
 
-<!-- NEW APARTMENT ESSENTIALS -->
-<div class="store-section">
-  <div class="store-header">
-    <div class="store-icon home">🏠</div>
-    <div>
-      <h2>Apartment Must-Haves</h2>
-      <div class="item-count">Critical "buy before you need" items</div>
-    </div>
-  </div>
-  <div class="item suggestion-item" onclick="addSuggestion('Plunger', 'General')">
-    <span class="item-label" style="cursor: pointer;">Plunger 🪠</span>
-  </div>
-  <div class="item suggestion-item" onclick="addSuggestion('Toilet Brush', 'General')">
-    <span class="item-label" style="cursor: pointer;">Toilet Brush</span>
-  </div>
-   <div class="item suggestion-item" onclick="addSuggestion('Shower Curtain & Liner', 'General')">
-    <span class="item-label" style="cursor: pointer;">Shower Curtain & Liner</span>
-  </div>
-  <div class="item suggestion-item" onclick="addSuggestion('First Aid Kit', 'General')">
-    <span class="item-label" style="cursor: pointer;">First Aid Kit 🩹</span>
-  </div>
-  <div class="item suggestion-item" onclick="addSuggestion('Flashlight & Batteries', 'General')">
-    <span class="item-label" style="cursor: pointer;">Flashlight & Batteries 🔦</span>
-  </div>
-  <div class="item suggestion-item" onclick="addSuggestion('Extension Cords / Power Strips', 'General')">
-    <span class="item-label" style="cursor: pointer;">Extension Cords / Power Strips</span>
-  </div>
-</div>
-
-<div class="store-section">
-  <div class="store-header">
-    <div class="store-icon tools">🛠️</div>
-    <div>
-      <h2>Tools & Cleaning</h2>
-      <div class="item-count">Assembly & Maintenance</div>
-    </div>
-  </div>
-  <div class="item suggestion-item" onclick="addSuggestion('Basic Tool Kit (Hammer, Screwdrivers, Tape)', 'Hardware Store')">
-    <span class="item-label" style="cursor: pointer;">Basic Tool Kit (Hammer, Screwdrivers, Tape)</span>
-  </div>
-  <div class="item suggestion-item" onclick="addSuggestion('Vacuum or Broom/Dustpan', 'Target')">
-    <span class="item-label" style="cursor: pointer;">Vacuum or Broom/Dustpan</span>
-  </div>
-  <div class="item suggestion-item" onclick="addSuggestion('Mop / Swiffer', 'Target')">
-    <span class="item-label" style="cursor: pointer;">Mop / Swiffer</span>
-  </div>
-  <div class="item suggestion-item" onclick="addSuggestion('All-Purpose Cleaner', 'Target')">
-    <span class="item-label" style="cursor: pointer;">All-Purpose Cleaner</span>
-  </div>
-</div>
-
-<!-- SUGGESTIONS: TJ MAXX -->
-<div class="store-section">
-  <div class="store-header">
-    <div class="store-icon tjmaxx">🏬</div>
-    <div>
-      <h2>TJ Maxx</h2>
-      <div class="item-count">Home goods section</div>
-    </div>
-  </div>
-  <div class="item suggestion-item" onclick="addSuggestion('Plates', this.closest('.store-section').querySelector('h2').textContent)">
-    <span class="item-label" style="cursor: pointer;">Plates</span>
-  </div>
-  <div class="item suggestion-item" onclick="addSuggestion('Spoons', this.closest('.store-section').querySelector('h2').textContent)">
-    <span class="item-label" style="cursor: pointer;">Spoons</span>
-  </div>
-  <div class="item suggestion-item" onclick="addSuggestion('Wine glass', this.closest('.store-section').querySelector('h2').textContent)">
-    <span class="item-label" style="cursor: pointer;">Wine glass</span>
-  </div>
-  <div class="item suggestion-item" onclick="addSuggestion('Trash bags', this.closest('.store-section').querySelector('h2').textContent)">
-    <span class="item-label" style="cursor: pointer;">Trash bags</span>
-  </div>
-  <div class="item suggestion-item" onclick="addSuggestion('Trash bin', this.closest('.store-section').querySelector('h2').textContent)">
-    <span class="item-label" style="cursor: pointer;">Trash bin</span>
-  </div>
-  <div class="item suggestion-item" onclick="addSuggestion('Cups', this.closest('.store-section').querySelector('h2').textContent)">
-    <span class="item-label" style="cursor: pointer;">Cups</span>
-  </div>
-  <div class="item suggestion-item" onclick="addSuggestion('Rain Jacket', this.closest('.store-section').querySelector('h2').textContent)">
-    <span class="item-label" style="cursor: pointer;">Rain Jacket</span>
-  </div>
-  <div class="item suggestion-item" onclick="addSuggestion('Chef\'s Knife', this.closest('.store-section').querySelector('h2').textContent)">
-    <span class="item-label" style="cursor: pointer;">Chef's Knife 🔪</span>
-  </div>
-  <div class="item suggestion-item" onclick="addSuggestion('Cutting Board', this.closest('.store-section').querySelector('h2').textContent)">
-    <span class="item-label" style="cursor: pointer;">Cutting Board</span>
-  </div>
-  <div class="item suggestion-item" onclick="addSuggestion('Can opener', this.closest('.store-section').querySelector('h2').textContent)">
-    <span class="item-label" style="cursor: pointer;">Can opener</span>
-  </div>
-  <div class="item suggestion-item" onclick="addSuggestion('Wine opener', this.closest('.store-section').querySelector('h2').textContent)">
-    <span class="item-label" style="cursor: pointer;">Wine opener</span>
-  </div>
-  <div class="item suggestion-item" onclick="addSuggestion('Oven mitts', this.closest('.store-section').querySelector('h2').textContent)">
-    <span class="item-label" style="cursor: pointer;">Oven mitts</span>
-  </div>
-  <div class="item suggestion-item" onclick="addSuggestion('Tupperware', this.closest('.store-section').querySelector('h2').textContent)">
-    <span class="item-label" style="cursor: pointer;">Tupperware</span>
-  </div>
-  <div class="item suggestion-item" onclick="addSuggestion('Bath mat', this.closest('.store-section').querySelector('h2').textContent)">
-    <span class="item-label" style="cursor: pointer;">Bath mat</span>
-  </div>
-  <div class="item suggestion-item" onclick="addSuggestion('Hand towels', this.closest('.store-section').querySelector('h2').textContent)">
-    <span class="item-label" style="cursor: pointer;">Hand towels</span>
-  </div>
-  <div class="item suggestion-item" onclick="addSuggestion('Bathing sponge', this.closest('.store-section').querySelector('h2').textContent)">
-    <span class="item-label" style="cursor: pointer;">Bathing sponge</span>
-  </div>
-  <div class="item suggestion-item" onclick="addSuggestion('Laundry hamper', this.closest('.store-section').querySelector('h2').textContent)">
-    <span class="item-label" style="cursor: pointer;">Laundry hamper</span>
-  </div>
-  <div class="item suggestion-item" onclick="addSuggestion('Hangers', this.closest('.store-section').querySelector('h2').textContent)">
-    <span class="item-label" style="cursor: pointer;">Hangers (Pack)</span>
-  </div>
-</div>
-
-<!-- SUGGESTIONS: COSTCO -->
-<div class="store-section">
-  <div class="store-header">
-    <div class="store-icon costco">🛒</div>
-    <div>
-      <h2>Costco</h2>
-      <div class="item-count">Bulk essentials + frozen proteins</div>
-    </div>
-  </div>
-  <div class="item suggestion-item" onclick="addSuggestion('Toilet paper', this.closest('.store-section').querySelector('h2').textContent)">
-    <span class="item-label" style="cursor: pointer;">Toilet paper</span>
-  </div>
-  <div class="item suggestion-item" onclick="addSuggestion('Paper towels', this.closest('.store-section').querySelector('h2').textContent)">
-    <span class="item-label" style="cursor: pointer;">Paper towels</span>
-  </div>
-  <div class="item suggestion-item" onclick="addSuggestion('Kitchen napkin', this.closest('.store-section').querySelector('h2').textContent)">
-    <span class="item-label" style="cursor: pointer;">Kitchen napkin</span>
-  </div>
-  <div class="item suggestion-item" onclick="addSuggestion('Coco water', this.closest('.store-section').querySelector('h2').textContent)">
-    <span class="item-label" style="cursor: pointer;">Coco water</span>
-  </div>
-  <div class="item suggestion-item" onclick="addSuggestion('Celsius', this.closest('.store-section').querySelector('h2').textContent)">
-    <span class="item-label" style="cursor: pointer;">Celsius</span>
-  </div>
-  <div class="item suggestion-item" onclick="addSuggestion('Laundry detergent', this.closest('.store-section').querySelector('h2').textContent)">
-    <span class="item-label" style="cursor: pointer;">Laundry detergent</span>
-  </div>
-  <div class="item suggestion-item" onclick="addSuggestion('Dish Soap & Sponges', this.closest('.store-section').querySelector('h2').textContent)">
-    <span class="item-label" style="cursor: pointer;">Dish Soap & Sponges</span>
-  </div>
-  <div class="item suggestion-item" onclick="addSuggestion('Kirkland Grilled Chicken Breast Skewers', this.closest('.store-section').querySelector('h2').textContent)">
-    <span class="item-label" style="cursor: pointer;">Kirkland Grilled Chicken Breast Skewers</span>
-  </div>
-  <div class="item suggestion-item" onclick="addSuggestion('Kirkland Wild Alaskan Sockeye Salmon', this.closest('.store-section').querySelector('h2').textContent)">
-    <span class="item-label" style="cursor: pointer;">Kirkland Wild Alaskan Sockeye Salmon</span>
-  </div>
-  <div class="item suggestion-item" onclick="addSuggestion('Kahiki Chicken Rice Bowls — Teriyaki', this.closest('.store-section').querySelector('h2').textContent)">
-    <span class="item-label" style="cursor: pointer;">Kahiki Chicken Rice Bowls — Teriyaki</span>
-  </div>
-  <div class="item suggestion-item" onclick="addSuggestion('Kirkland Rotisserie Chicken', this.closest('.store-section').querySelector('h2').textContent)">
-    <span class="item-label" style="cursor: pointer;">Kirkland Rotisserie Chicken</span>
-  </div>
-  <div class="item suggestion-item" onclick="addSuggestion('Bibigo Beef Pho Steamed Dumplings', this.closest('.store-section').querySelector('h2').textContent)">
-    <span class="item-label" style="cursor: pointer;">Bibigo Beef Pho Steamed Dumplings</span>
-  </div>
-  <div class="item suggestion-item" onclick="addSuggestion('Kirkland Boneless Chicken Breasts (frozen)', this.closest('.store-section').querySelector('h2').textContent)">
-    <span class="item-label" style="cursor: pointer;">Kirkland Boneless Chicken Breasts (frozen)</span>
-  </div>
-</div>
-
-<!-- SUGGESTIONS: TRADER JOE'S -->
-<div class="store-section">
-  <div class="store-header">
-    <div class="store-icon tj">🛒</div>
-    <div>
-      <h2>Trader Joe's</h2>
-      <div class="item-count">Pantry staples + proteins</div>
-    </div>
-  </div>
-  <div class="item suggestion-item" onclick="addSuggestion('Eggs', this.closest('.store-section').querySelector('h2').textContent)">
-    <span class="item-label" style="cursor: pointer;">Eggs</span>
-  </div>
-  <div class="item suggestion-item" onclick="addSuggestion('Butter', this.closest('.store-section').querySelector('h2').textContent)">
-    <span class="item-label" style="cursor: pointer;">Butter</span>
-  </div>
-  <div class="item suggestion-item" onclick="addSuggestion('Olive oil', this.closest('.store-section').querySelector('h2').textContent)">
-    <span class="item-label" style="cursor: pointer;">Olive oil</span>
-  </div>
-  <div class="item suggestion-item" onclick="addSuggestion('Salt', this.closest('.store-section').querySelector('h2').textContent)">
-    <span class="item-label" style="cursor: pointer;">Salt</span>
-  </div>
-  <div class="item suggestion-item" onclick="addSuggestion('Pepper', this.closest('.store-section').querySelector('h2').textContent)">
-    <span class="item-label" style="cursor: pointer;">Pepper</span>
-  </div>
-  <div class="item suggestion-item" onclick="addSuggestion('Branzino Fish', this.closest('.store-section').querySelector('h2').textContent)">
-    <span class="item-label" style="cursor: pointer;">Branzino Fish</span>
-  </div>
-  <div class="item suggestion-item" onclick="addSuggestion('Tikka Masala', this.closest('.store-section').querySelector('h2').textContent)">
-    <span class="item-label" style="cursor: pointer;">Tikka Masala</span>
-  </div>
-  <div class="item suggestion-item" onclick="addSuggestion('Argentinian Red Shrimp — Ginger Garlic Butter', this.closest('.store-section').querySelector('h2').textContent)">
-    <span class="item-label" style="cursor: pointer;">Argentinian Red Shrimp — Ginger Garlic Butter</span>
-  </div>
-  <div class="item suggestion-item" onclick="addSuggestion('Wild Raw Argentinian Red Shrimp (1 lb bag)', this.closest('.store-section').querySelector('h2').textContent)">
-    <span class="item-label" style="cursor: pointer;">Wild Raw Argentinian Red Shrimp (1 lb bag)</span>
-  </div>
-  <div class="item suggestion-item" onclick="addSuggestion('Pulled Chicken Salsa Verde', this.closest('.store-section').querySelector('h2').textContent)">
-    <span class="item-label" style="cursor: pointer;">Pulled Chicken Salsa Verde</span>
-  </div>
-  <div class="item suggestion-item" onclick="addSuggestion('Pre-Cooked Grilled Chicken Strips', this.closest('.store-section').querySelector('h2').textContent)">
-    <span class="item-label" style="cursor: pointer;">Pre-Cooked Grilled Chicken Strips</span>
-  </div>
-  <div class="item suggestion-item" onclick="addSuggestion('Bacon Cheddar Egg Bites', this.closest('.store-section').querySelector('h2').textContent)">
-    <span class="item-label" style="cursor: pointer;">Bacon Cheddar Egg Bites</span>
-  </div>
+<!-- SUGGESTIONS CONTAINER -->
+<!-- Now fully dynamic -->
+<div id="suggestionsContainer">
+  <!-- Filled by Javascript -->
 </div>
 
 </body>
