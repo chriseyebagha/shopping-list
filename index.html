@@ -399,16 +399,90 @@
       width: 18px;
       height: 18px;
       margin-left: 8px;
-      /* Space from text */
       margin-right: 0;
       color: #9ca3af;
-      /* Light grey default */
       font-size: 18px;
       font-weight: 300;
-      /* Thinner */
       transition: all 0.2s ease;
       flex-shrink: 0;
     }
+
+    /* LOGIN OVERLAY */
+    #loginOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #f4f6f8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .login-box {
+      background: white;
+      padding: 32px;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      text-align: center;
+      max-width: 90%;
+      width: 360px;
+    }
+    .login-btn {
+      background: #4285F4;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      margin-top: 20px;
+      transition: background 0.2s;
+    }
+    .login-btn:hover { background: #357ae8; }
+    
+    /* USER HEADER */
+    .user-header {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-bottom: 20px;
+      max-width: 660px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9rem;
+      color: #5a6070;
+    }
+    .user-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #e0e3e8;
+    }
+    .logout-btn {
+      font-size: 0.8rem;
+      color: #ef4444;
+      background: none;
+      border: 1px solid #ef4444;
+      padding: 4px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
 
     .item-label {
       font-size: 0.95rem;
@@ -478,7 +552,8 @@
   <script type="module">
     // Import the functions you need from the SDKs you need
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getDatabase, ref, set, push, onValue, remove, update, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { getDatabase, ref, set, push, onValue, remove, update, off } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
     // TODO: Replace with your project's config object
     // You can find this in Firebase Console -> Project Settings -> General -> Your apps
@@ -496,11 +571,14 @@
     // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
 
-    // References
-    const listRef = ref(db, 'shoppingList');
-    const suggestionsRef = ref(db, 'suggestions');
-    const iconsRef = ref(db, 'storeIcons');
+    // References (Dynamic based on User)
+    let listRef;
+    let suggestionsRef;
+    let iconsRef;
+    let currentUser = null;
 
     // --- INITIAL DATA SEEDING ---
     const INITIAL_SEED_DATA = [
@@ -562,41 +640,100 @@
       return { emoji: '🛍️', color: '#6b7280' };
     };
 
+    // --- AUTH LOGIC ---
+    window.login = () => {
+      signInWithPopup(auth, provider)
+        .then((result) => {
+          // User signed in
+          console.log("User signed in:", result.user);
+        }).catch((error) => {
+          console.error("Login failed", error);
+          alert("Login failed: " + error.message);
+        });
+    };
+
+    window.logout = () => {
+      signOut(auth).then(() => {
+        console.log("User signed out");
+        location.reload(); // Refresh to clear state cleanly
+      }).catch((error) => {
+        console.error("Logout failed", error);
+      });
+    };
+
+    onAuthStateChanged(auth, (user) => {
+      const overlay = document.getElementById('loginOverlay');
+      const userHeader = document.getElementById('userHeader');
+      
+      if (user) {
+        currentUser = user;
+        // 1. Hide Overlay
+        if(overlay) overlay.style.display = 'none';
+        
+        // 2. Show User info
+        if(userHeader) {
+          userHeader.style.display = 'flex';
+          userHeader.innerHTML = `
+            <div class="user-info">
+              <img src="${user.photoURL}" class="user-avatar" alt="Avatar" />
+              <span>${user.displayName.split(' ')[0]}'s List</span>
+            </div>
+            <button class="logout-btn" onclick="logout()">Sign Out</button>
+          `;
+        }
+
+        // 3. Set References to Private Paths
+        listRef = ref(db, `users/${user.uid}/shoppingList`);
+        suggestionsRef = ref(db, `users/${user.uid}/suggestions`);
+        iconsRef = ref(db, `users/${user.uid}/storeIcons`);
+
+        // 4. Attach Listeners
+        setupListeners();
+      } else {
+        // No user
+        currentUser = null;
+        if(overlay) overlay.style.display = 'flex';
+        if(userHeader) userHeader.style.display = 'none';
+      }
+    });
+
     // --- SYNC LOGIC ---
 
-    // 1. Listen for Active List Changes
-    onValue(listRef, (snapshot) => {
-      const data = snapshot.val();
-      window.activeList = [];
-      if (data) {
-        // Convert object {key: val} to array [{id: key, ...val}]
-        Object.entries(data).forEach(([key, val]) => {
-          window.activeList.push({ id: key, ...val });
-        });
-      }
-      renderActiveList();
-    });
+    function setupListeners() {
+      // 1. Listen for Active List Changes
+      onValue(listRef, (snapshot) => {
+        const data = snapshot.val();
+        window.activeList = [];
+        if (data) {
+          // Convert object {key: val} to array [{id: key, ...val}]
+          Object.entries(data).forEach(([key, val]) => {
+            window.activeList.push({ id: key, ...val });
+          });
+        }
+        renderActiveList();
+      });
 
-    // 2. Listen for Suggestions Changes
-    onValue(suggestionsRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        window.suggestionDB = data;
-      } else {
-        // Seed if empty (first run on new project)
-        seedDatabase();
-      }
-      renderSuggestions();
-    });
+      // 2. Listen for Suggestions Changes
+      onValue(suggestionsRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          window.suggestionDB = data;
+        } else {
+          // Seed if empty (first run on new project)
+          seedDatabase();
+        }
+        renderSuggestions();
+      });
 
-    // 3. Listen for Icon Changes (optional, but good for custom stores)
-    onValue(iconsRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        window.storeIcons = data;
-      }
-      renderAll();
-    });
+      // 3. Listen for Icon Changes (optional)
+      onValue(iconsRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          window.storeIcons = { ...window.storeIcons, ...data };
+        }
+        renderAll();
+      });
+    }
 
 
     // --- MIGRATION / SEEDING ---
@@ -639,6 +776,7 @@
     // --- ACTIONS (Write to Firebase) ---
 
     window.addItem = function (itemName, storeName) {
+      if (!currentUser) return;
       if (!itemName.trim() || !storeName.trim()) return;
       itemName = itemName.trim();
       storeName = storeName.trim();
@@ -677,27 +815,31 @@
     };
 
     window.removeItem = function (id) {
-      remove(ref(db, `shoppingList/${id}`));
+       if (!currentUser) return;
+      remove(ref(db, `users/${currentUser.uid}/shoppingList/${id}`));
     };
 
     window.toggleItem = function (id, currentStatus) {
-      update(ref(db, `shoppingList/${id}`), { checked: !currentStatus });
+       if (!currentUser) return;
+      update(ref(db, `users/${currentUser.uid}/shoppingList/${id}`), { checked: !currentStatus });
     };
 
     window.clearChecked = function () {
+       if (!currentUser) return;
       // Find all checked items and remove them
       // This is not atomic, but fine for personal app.
       // Better: Create a 'updates' object to set null for all paths
       const updates = {};
       window.activeList.forEach(item => {
         if (item.checked) {
-          updates[`shoppingList/${item.id}`] = null;
+          updates[`users/${currentUser.uid}/shoppingList/${item.id}`] = null;
         }
       });
       if (Object.keys(updates).length > 0) update(ref(db), updates);
     };
 
     window.clearAll = function () {
+       if (!currentUser) return;
       if (window.confirm('Are you sure you want to delete ALL items from the list?')) {
         set(listRef, null);
       }
@@ -705,6 +847,7 @@
 
     // Custom Store Add
     window.addCustomStore = function (storeName) {
+      if (!currentUser) return;
       if (!window.storeIcons[storeName]) {
         const updates = {};
         updates[storeName] = { emoji: '🛍️', color: '#6b7280' };
@@ -899,6 +1042,20 @@
 </head>
 
 <body>
+  <div id="loginOverlay">
+    <div class="login-box">
+      <h1 style="color:#d4850f; margin-bottom:10px;">Shopping List</h1>
+      <p style="color:#5a6070; margin-bottom:24px;">Sign in to sync your items across devices.</p>
+      <button class="login-btn" onclick="login()">
+        <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#fff" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"></path><path fill="#fff" d="M9 18c2.43 0 4.467-.806 5.956-2.180l-2.908-2.259c-.806.54-1.836.86-3.048.86-2.344 0-4.328-1.584-5.036-3.715H.957v2.332A8.997 8.997 0 0 1 9 18z" opacity=".2"></path><path fill="#fff" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" opacity=".4"></path><path fill="#fff" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 1 .957 4.958L3.964 7.29C4.672 5.159 6.656 3.58 9 3.58z" opacity=".2"></path></svg>
+        Sign in with Google
+      </button>
+    </div>
+  </div>
+
+  <div id="userHeader" class="user-header" style="display:none;"></div>
+
+
   <div class="header">
     <h1>Chris' <span class="highlight">Shopping List</span></h1>
     <p>Smart, synced, and organized.</p>
