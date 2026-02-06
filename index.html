@@ -475,10 +475,36 @@
       }
     }
   </style>
-  <script>
+  <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, set, push, onValue, remove, update, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    // TODO: Replace with your project's config object
+    // You can find this in Firebase Console -> Project Settings -> General -> Your apps
+    const firebaseConfig = {
+      apiKey: "AIzaSyBAnMbbd7hbQvx8mdNF5PajAdxl_VYOsxE",
+      authDomain: "chris-shopping-list.firebaseapp.com",
+      databaseURL: "https://chris-shopping-list-default-rtdb.firebaseio.com",
+      projectId: "chris-shopping-list",
+      storageBucket: "chris-shopping-list.firebasestorage.app",
+      messagingSenderId: "222533323145",
+      appId: "1:222533323145:web:f24d42c4dccd0fa19fb958",
+      measurementId: "G-V3DT5PCT0D"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // References
+    const listRef = ref(db, 'shoppingList');
+    const suggestionsRef = ref(db, 'suggestions');
+    const iconsRef = ref(db, 'storeIcons');
+
     // --- INITIAL DATA SEEDING ---
-    // Consolidated stores: Home Depot, Hardware -> General
     const INITIAL_SEED_DATA = [
+      // ... (Keep existing seed data for backup/init)
       // General / Home
       { name: 'Plates', store: 'General', count: 5 },
       { name: 'Spoons', store: 'General', count: 5 },
@@ -487,7 +513,6 @@
       { name: 'Trash bin', store: 'General', count: 2 },
       { name: 'Cups', store: 'General', count: 5 },
       { name: 'Rain Jacket', store: 'General', count: 1 },
-
       // Costco
       { name: 'Toilet paper', store: 'Costco', count: 20 },
       { name: 'Paper towels', store: 'Costco', count: 18 },
@@ -500,7 +525,6 @@
       { name: 'Kirkland Rotisserie Chicken', store: 'Costco', count: 25 },
       { name: 'Bibigo Beef Pho Steamed Dumplings', store: 'Costco', count: 10 },
       { name: 'Kirkland Boneless Chicken Breasts (frozen)', store: 'Costco', count: 10 },
-
       // Trader Joe's
       { name: 'Eggs', store: "Trader Joe's", count: 30 },
       { name: 'Butter', store: "Trader Joe's", count: 15 },
@@ -516,11 +540,12 @@
     ];
 
     // --- APP STATE ---
-    let activeList = [];
-    let suggestionDB = {};
+    // Exposed to window for UI calls, but managed by Firebase listeners
+    window.activeList = [];
+    window.suggestionDB = {};
 
     // Store icon mapping - simplified
-    const storeIcons = {
+    window.storeIcons = {
       'TJ Maxx': { emoji: '🏬', color: '#991b1b' },
       'Costco': { emoji: '🛒', color: '#003087' },
       "Trader Joe's": { emoji: '🛒', color: '#c1272d' },
@@ -532,203 +557,218 @@
       'General': { emoji: '🏠', color: '#f97316' }
     };
 
-    function getStoreIcon(storeName) {
-      if (storeIcons[storeName]) return storeIcons[storeName];
+    window.getStoreIcon = function (storeName) {
+      if (window.storeIcons[storeName]) return window.storeIcons[storeName];
       return { emoji: '🛍️', color: '#6b7280' };
-    }
+    };
 
-    // --- PERSISTENCE ---
-    function saveAppState() {
-      try {
-        localStorage.setItem('activeShoppingList', JSON.stringify(activeList));
-        localStorage.setItem('shoppingListSuggestionsDB', JSON.stringify(suggestionDB));
-        localStorage.setItem('storeIcons', JSON.stringify(storeIcons));
-      } catch (e) {
-        console.error("Local Storage Error:", e);
-        alert("Warning: Could not save list. Private browsing mode?");
-      }
-    }
+    // --- SYNC LOGIC ---
 
-    function loadAppState() {
-      try {
-        const savedActive = localStorage.getItem('activeShoppingList');
-        if (savedActive) activeList = JSON.parse(savedActive);
-
-        const savedIcons = localStorage.getItem('storeIcons');
-        if (savedIcons) Object.assign(storeIcons, JSON.parse(savedIcons));
-
-        const savedDB = localStorage.getItem('shoppingListSuggestionsDB');
-        if (savedDB) {
-          suggestionDB = JSON.parse(savedDB);
-        }
-
-        // Always merge new seed data (if missing) to ensure user sees new suggested items
-        const now = Date.now();
-        INITIAL_SEED_DATA.forEach(item => {
-          if (!suggestionDB[item.name]) {
-            suggestionDB[item.name] = {
-              store: item.store,
-              count: item.count,
-              lastUsed: now
-            };
-          }
+    // 1. Listen for Active List Changes
+    onValue(listRef, (snapshot) => {
+      const data = snapshot.val();
+      window.activeList = [];
+      if (data) {
+        // Convert object {key: val} to array [{id: key, ...val}]
+        Object.entries(data).forEach(([key, val]) => {
+          window.activeList.push({ id: key, ...val });
         });
-
-        // Cleanup legacy "Coco Water" if present
-        if (suggestionDB['Coco Water']) {
-          // Move stats to "Coconut Water" if they exist and we just added it, or merge
-          // For simplicity, just delete it as we have Coconut Water now.
-          delete suggestionDB['Coco Water'];
-        }
-
-        // MIGRATION: Fix legacy store names
-        Object.keys(suggestionDB).forEach(key => {
-          if (suggestionDB[key].store === 'Hardware Store' || suggestionDB[key].store === 'Home Depot') {
-            suggestionDB[key].store = 'General';
-          }
-        });
-
-        // Save the merged state
-        saveAppState();
-
-        } catch (e) {
-        console.error("Local Storage Error:", e);
       }
-    }
+      renderActiveList();
+    });
 
+    // 2. Listen for Suggestions Changes
+    onValue(suggestionsRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        window.suggestionDB = data;
+      } else {
+        // Seed if empty (first run on new project)
+        seedDatabase();
+      }
+      renderSuggestions();
+    });
+
+    // 3. Listen for Icon Changes (optional, but good for custom stores)
+    onValue(iconsRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        window.storeIcons = data;
+      }
+      renderAll();
+    });
+
+
+    // --- MIGRATION / SEEDING ---
     function seedDatabase() {
-      const now = Date.now();
-      INITIAL_SEED_DATA.forEach(item => {
-        suggestionDB[item.name] = {
-          store: item.store,
-          count: item.count,
-          lastUsed: now
-        };
-      });
-      saveAppState();
+      // Check if we have local data to migrate first?
+      const savedDB = localStorage.getItem('shoppingListSuggestionsDB');
+      if (savedDB) {
+        try {
+          const localDB = JSON.parse(savedDB);
+          update(suggestionsRef, localDB);
+          console.log("Migrated local suggestions to Cloud");
+        } catch (e) { console.error("Migration failed", e); }
+      } else {
+        // Use seed data
+        const updates = {};
+        INITIAL_SEED_DATA.forEach(item => {
+          updates[item.name] = {
+            store: item.store,
+            count: item.count,
+            lastUsed: Date.now()
+          };
+        });
+        update(suggestionsRef, updates);
+      }
+
+      // Migrate Active List too if it exists locally
+      const savedActive = localStorage.getItem('activeShoppingList');
+      if (savedActive) {
+        try {
+          const localList = JSON.parse(savedActive);
+          localList.forEach(item => {
+            push(listRef, { name: item.name, store: item.store, checked: item.checked });
+          });
+          // Clear local storage to avoid re-migrating? Or just leave it.
+          localStorage.removeItem('activeShoppingList');
+        } catch (e) { }
+      }
     }
 
-    // --- LOGIC ---
+    // --- ACTIONS (Write to Firebase) ---
 
-    function addItem(itemName, storeName) {
+    window.addItem = function (itemName, storeName) {
       if (!itemName.trim() || !storeName.trim()) return;
       itemName = itemName.trim();
       storeName = storeName.trim();
 
-      // Check for duplicate in active list to avoid double add
-      const exists = activeList.some(i => i.name.toLowerCase() === itemName.toLowerCase() && i.store === storeName);
+      // Check for duplicate in active list
+      const exists = window.activeList.some(i => i.name.toLowerCase() === itemName.toLowerCase() && i.store === storeName);
       if (exists) {
         alert(`"${itemName}" is already in your list!`);
         return;
       }
 
-      activeList.push({ name: itemName, store: storeName, checked: false });
+      push(listRef, { name: itemName, store: storeName, checked: false });
       updateItemStats(itemName, storeName);
-      saveAppState();
-      renderAll();
-    }
+    };
 
-    function updateItemStats(itemName, storeName) {
-      if (!suggestionDB[itemName]) {
-        suggestionDB[itemName] = {
+    window.updateItemStats = function (itemName, storeName) {
+      // Since we can't easily query exact key, we construct a path or update based on known logic
+      // Simplest: just update the specific item path in suggestions
+      const updates = {};
+      const current = window.suggestionDB[itemName];
+
+      if (!current) {
+        updates[itemName] = {
           store: storeName,
           count: 1,
           lastUsed: Date.now()
         };
       } else {
-        suggestionDB[itemName].count++;
-        suggestionDB[itemName].lastUsed = Date.now();
-        suggestionDB[itemName].store = storeName;
+        updates[itemName] = {
+          store: storeName,
+          count: current.count + 1,
+          lastUsed: Date.now()
+        };
       }
-    }
+      update(suggestionsRef, updates);
+    };
 
-    function removeItem(index) {
-      activeList.splice(index, 1);
-      saveAppState();
-      renderActiveList();
-    }
+    window.removeItem = function (id) {
+      remove(ref(db, `shoppingList/${id}`));
+    };
 
-    function toggleItem(index) {
-      activeList[index].checked = !activeList[index].checked;
-      saveAppState();
-    }
+    window.toggleItem = function (id, currentStatus) {
+      update(ref(db, `shoppingList/${id}`), { checked: !currentStatus });
+    };
 
-    // Fixed Logic for Clear Buttons
-    function clearChecked() {
-      if (activeList.some(i => i.checked)) {
-        activeList = activeList.filter(item => !item.checked);
-        saveAppState();
-        renderActiveList();
-      }
-    }
+    window.clearChecked = function () {
+      // Find all checked items and remove them
+      // This is not atomic, but fine for personal app.
+      // Better: Create a 'updates' object to set null for all paths
+      const updates = {};
+      window.activeList.forEach(item => {
+        if (item.checked) {
+          updates[`shoppingList/${item.id}`] = null;
+        }
+      });
+      if (Object.keys(updates).length > 0) update(ref(db), updates);
+    };
 
-    function clearAll() {
-      // Use a simple confirm. If it fails on some devices, user can just delete items manually,
-      // but standard confirm is best practice.
+    window.clearAll = function () {
       if (window.confirm('Are you sure you want to delete ALL items from the list?')) {
-        activeList = [];
-        saveAppState();
-        renderActiveList();
+        set(listRef, null);
+      }
+    };
+
+    // Custom Store Add
+    window.addCustomStore = function (storeName) {
+      if (!window.storeIcons[storeName]) {
+        const updates = {};
+        updates[storeName] = { emoji: '🛍️', color: '#6b7280' };
+        update(iconsRef, updates);
       }
     }
 
-    // --- RENDERING ---
-
-    function renderAll() {
+    // --- RENDERING (Only slight mods needed for IDs) ---
+    // We attach these to window so HTML onclicks work
+    window.renderAll = function () {
       renderActiveList();
       renderSuggestions();
-    }
+    };
 
-    function renderActiveList() {
+    window.renderActiveList = function () {
       const container = document.getElementById('activeListContainer');
 
-      if (activeList.length === 0) {
+      if (window.activeList.length === 0) {
         container.innerHTML = '<div class="active-list-empty">Your list is empty. Add items above to get started.</div>';
         return;
       }
 
       // Group by store
       const byStore = {};
-      activeList.forEach((item, idx) => {
+      window.activeList.forEach((item) => {
         if (!byStore[item.store]) byStore[item.store] = [];
-        byStore[item.store].push({ ...item, index: idx });
+        byStore[item.store].push(item);
       });
 
       let html = '<div class="active-list">';
       Object.keys(byStore).sort().forEach(storeName => {
-        const icon = getStoreIcon(storeName);
+        const icon = window.getStoreIcon(storeName);
         html += `
-      <div class="store-group">
-        <div class="store-group-header">
-          <div class="store-group-icon" style="background: ${icon.color}">${icon.emoji}</div>
-          <div class="store-group-name">${storeName}</div>
-        </div>
-        <div class="active-items-grid">
-    `;
+          <div class="store-group">
+            <div class="store-group-header">
+              <div class="store-group-icon" style="background: ${icon.color}">${icon.emoji}</div>
+              <div class="store-group-name">${storeName}</div>
+            </div>
+            <div class="active-items-grid">
+        `;
 
         byStore[storeName].forEach(item => {
           html += `
-        <div class="item active-item">
-          <label>
-            <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleItem(${item.index})"/>
-            <div class="checkmark"><svg viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6.5L5 9.5L10 3"/></svg></div>
-            <span class="item-label">${item.name}</span>
-          </label>
-          <button class="delete-btn" onclick="removeItem(${item.index})">Delete</button>
-        </div>
-      `;
+            <div class="item active-item">
+              <label>
+                <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleItem('${item.id}', ${item.checked})"/>
+                <div class="checkmark"><svg viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6.5L5 9.5L10 3"/></svg></div>
+                <span class="item-label">${item.name}</span>
+              </label>
+              <button class="delete-btn" onclick="removeItem('${item.id}')">Delete</button>
+            </div>
+          `;
         });
         html += '</div></div>';
       });
       html += '</div>';
       container.innerHTML = html;
-    }
+    };
 
-    function renderSuggestions() {
+    window.renderSuggestions = function () {
       const container = document.getElementById('suggestionsContainer');
-      const activeNames = new Set(activeList.map(i => i.name));
+      const activeNames = new Set(window.activeList.map(i => i.name));
 
-      let candidates = Object.entries(suggestionDB).map(([name, data]) => ({
+      let candidates = Object.entries(window.suggestionDB).map(([name, data]) => ({
         name: name,
         ...data
       }));
@@ -736,7 +776,7 @@
       // Filter out active items
       candidates = candidates.filter(item => !activeNames.has(item.name));
 
-      // SMART SORT: Frequency desc, then Recency desc
+      // SMART SORT
       candidates.sort((a, b) => {
         if (b.count !== a.count) return b.count - a.count;
         return b.lastUsed - a.lastUsed;
@@ -745,7 +785,7 @@
       const topSuggestions = candidates.slice(0, 50);
 
       if (topSuggestions.length === 0) {
-        container.innerHTML = '<div style="text-align:center; color:#999; padding:20px;">No suggestions available. Add new items above and I\'ll remember them!</div>';
+        container.innerHTML = `<div style="text-align:center; color:#999; padding:20px;">No suggestions available. Add new items above and I'll remember them!</div>`;
         return;
       }
 
@@ -757,133 +797,142 @@
 
       let html = '';
       Object.keys(byStore).sort().forEach(storeName => {
-        const icon = getStoreIcon(storeName);
+        const icon = window.getStoreIcon(storeName);
         html += `
-      <div class="store-section">
-        <div class="store-header">
-          <div class="store-icon" style="background: ${icon.color}">${icon.emoji}</div>
-          <div>
-            <h2>${storeName}</h2>
-            <div class="item-count">Suggested</div>
-          </div>
-        </div>
-        <div class="suggestions-grid">
-    `;
+          <div class="store-section">
+            <div class="store-header">
+              <div class="store-icon" style="background: ${icon.color}">${icon.emoji}</div>
+              <div>
+                <h2>${storeName}</h2>
+                <div class="item-count">${byStore[storeName].length} suggestions</div>
+              </div>
+            </div>
+            <div class="suggestions-grid">
+        `;
 
         byStore[storeName].forEach(item => {
-          const escapedName = item.name.replace(/'/g, "\\'");
-          const escapedStore = item.store.replace(/'/g, "\\'");
-
           html += `
-        <div class="item suggestion-item" onclick="addSuggestion('${escapedName}', '${escapedStore}')">
-          <span class="item-label" style="pointer-events: none;">${item.name}</span>
-          <div class="suggestion-icon">+</div>
-        </div>
-      `;
+            <div class="item suggestion-item" onclick="addItem('${item.name.replace(/'/g, "\\'")}', '${item.store.replace(/'/g, "\\'")}')">
+              <div class="item-label">${item.name}</div>
+              <div class="suggestion-icon">+</div>
+            </div>
+          `;
         });
-        html += '</div></div>'; // Close grid and section
+        html += '</div></div>';
       });
-
       container.innerHTML = html;
-    }
+    };
 
-    function addSuggestion(name, store) {
-      addItem(name, store);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
 
+    // --- EVENT LISTENERS ---
     window.addEventListener('DOMContentLoaded', function () {
-      loadAppState();
-      renderAll();
-
-      const addForm = document.getElementById('addItemForm');
+      // Firebase listeners handle data loading and render
+      // renderAll() will be called when onValue triggers
+      // We set up the form submit listener here
+      const form = document.querySelector('.add-item-form');
       const itemInput = document.getElementById('newItemInput');
       const storeSelect = document.getElementById('storeSelect');
+      const newStoreInput = document.getElementById('newStoreInput');
 
-      addForm.addEventListener('submit', function (e) {
-        e.preventDefault();
-        addItem(itemInput.value, storeSelect.value);
-        itemInput.value = '';
-        itemInput.focus();
-      });
+      // Populate Store Select
+      const updateStoreSelect = () => {
+        const stores = Object.keys(window.storeIcons).sort();
+        // Custom sort order logic
+        const priority = ['Trader Joe\'s', 'Costco', 'Amazon'];
+        stores.sort((a, b) => {
+          const idxA = priority.indexOf(a);
+          const idxB = priority.indexOf(b);
+          if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+          if (idxA !== -1) return -1;
+          if (idxB !== -1) return 1;
+          return a.localeCompare(b);
+        });
 
+        // Current selection
+        const currentVal = storeSelect.value;
+        storeSelect.innerHTML = stores.map(s => `<option value="${s}">${s}</option>`).join('');
+        storeSelect.innerHTML += '<option value="Other">Other...</option>';
+
+        if (currentVal && stores.includes(currentVal)) {
+          storeSelect.value = currentVal;
+        } else if (currentVal === 'Other') {
+          storeSelect.value = 'Other';
+        } else {
+          storeSelect.value = "Trader Joe's"; // Default if not found
+        }
+      };
+      updateStoreSelect();
+
+      // Handle "Other" store
       storeSelect.addEventListener('change', function () {
-        if (this.value === 'custom') {
-          // Use simple default specific stores or 'General' as fallback if cancel
-          const customStore = prompt('Enter store name:');
-          if (customStore && customStore.trim()) {
-            const option = document.createElement('option');
-            option.value = customStore.trim();
-            option.textContent = customStore.trim();
-            option.selected = true;
-            this.insertBefore(option, this.querySelector('option[value="custom"]'));
-
-            if (!storeIcons[customStore.trim()]) {
-              storeIcons[customStore.trim()] = { emoji: '🛍️', color: '#6b7280' };
-            }
-          } else {
-            this.value = '';
-          }
+        if (this.value === 'Other') {
+          newStoreInput.style.display = 'block';
+          newStoreInput.focus();
+        } else {
+          newStoreInput.style.display = 'none';
         }
       });
 
-      // Touch support is redundant with onclick usually, but kept for legacy webviews
-      // Removing touch event listener to avoid double-firing as onclick works fine on mobile modern browsers
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        const item = itemInput.value;
+        let store = storeSelect.value;
+        if (store === 'Other') {
+          store = newStoreInput.value;
+          if (store && !window.storeIcons[store]) {
+            window.addCustomStore(store);
+          }
+        }
+        if (item && store) {
+          window.addItem(item, store);
+          itemInput.value = '';
+          // Reset store logic if desired, or keep last used
+          if (storeSelect.value === 'Other') {
+             storeSelect.value = "Trader Joe's";
+             newStoreInput.style.display = 'none';
+             newStoreInput.value = '';
+          }
+        }
+      });
     });
   </script>
 </head>
 
 <body>
-
   <div class="header">
-    <h1>Shopping <span class="highlight">List</span></h1>
-    <p>Your smart, learning shopping companion.</p>
+    <h1>Chris' <span class="highlight">Shopping List</span></h1>
+    <p>Smart, synced, and organized.</p>
   </div>
 
-  <!-- ADD ITEM SECTION -->
   <div class="add-item-section">
-    <h3>➕ Add Item</h3>
-    <form id="addItemForm" class="add-item-form">
+    <h3>Add New Item</h3>
+    <form class="add-item-form">
       <div class="add-item-row">
-        <input type="text" id="newItemInput" placeholder="e.g. Milk, Batteries..." required />
-        <select id="storeSelect" required>
-          <option value="">Store...</option>
-          <option value="Trader Joe's">Trader Joe's</option>
-          <option value="Costco">Costco</option>
-          <option value="Amazon">Amazon</option>
-          <option value="Target">Target</option>
-          <option value="TJ Maxx">TJ Maxx</option>
-          <option value="General">General</option>
-          <option value="custom">+ New Store...</option>
+        <input type="text" id="newItemInput" placeholder="What do you need?" required />
+        <select id="storeSelect">
+          <!-- Populated by JS -->
         </select>
       </div>
+      <input type="text" id="newStoreInput" placeholder="Enter store name..." style="display:none;" />
       <button type="submit">Add to List</button>
     </form>
   </div>
 
-  <!-- ACTIVE LIST -->
   <div id="activeListContainer">
-    <!-- Filled by Javascript -->
+    <!-- Active items go here -->
   </div>
 
-  <!-- ACTION BUTTONS -->
-  <div class="action-buttons">
-    <button onclick="clearChecked()">Clear Checked</button>
-    <button class="danger" onclick="clearAll()">Reset List</button>
-  </div>
-
-  <!-- DIVIDER -->
   <div class="divider">
     <span>Suggested For You</span>
   </div>
 
-  <!-- SUGGESTIONS CONTAINER -->
   <div id="suggestionsContainer">
-    <!-- Filled by Javascript -->
+    <!-- Suggestions go here -->
   </div>
 
-  <div style="text-align: center; margin-top: 30px; color: #9ca3af; font-size: 0.8rem; padding-bottom: 20px;">
-    Shopping List App v1.1
+  <div class="action-buttons">
+    <button onclick="clearChecked()">Clear Checked</button>
+    <button class="danger" onclick="clearAll()">Delete All</button>
   </div>
 </body>
 
