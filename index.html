@@ -55,6 +55,46 @@
       padding: 16px;
     }
 
+    /* Phone Auth Styling */
+    #phone-auth-container {
+      display: none;
+      /* Hidden by default */
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 20px;
+      width: 100%;
+    }
+
+    .phone-input-group {
+      display: flex;
+      gap: 8px;
+    }
+
+    .phone-input-group input {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 1rem;
+    }
+
+    #recaptcha-container {
+      margin-top: 10px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .secondary-btn {
+      background: transparent;
+      color: #555;
+      border: 1px solid #ccc;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      margin-top: 10px;
+    }
+
     .add-item-section h3 {
       font-size: 0.9rem;
       font-weight: 600;
@@ -407,48 +447,109 @@
       flex-shrink: 0;
     }
 
-    /* LOGIN OVERLAY */
+    /* LOGIN OVERLAY - Premium 'Crystal Clean' Glassmorphism Theme */
     #loginOverlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: #f4f6f8;
+      /* Modern Mesh Gradient Background - 'Crystal Clean' */
+      background-color: #ffffff;
+      background-image:
+        radial-gradient(at 93% 9%, hsla(225, 66%, 89%, 1) 0px, transparent 50%),
+        radial-gradient(at 6% 91%, hsla(263, 62%, 87%, 1) 0px, transparent 50%),
+        radial-gradient(at 26% 8%, hsla(199, 74%, 90%, 1) 0px, transparent 50%),
+        radial-gradient(at 89% 88%, hsla(297, 61%, 86%, 1) 0px, transparent 50%);
+
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       z-index: 1000;
     }
+
     .login-box {
-      background: white;
-      padding: 32px;
-      border-radius: 16px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      /* Frosted Glass Effect */
+      background: rgba(255, 255, 255, 0.45);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      padding: 48px;
+      border-radius: 32px;
+      /* Subtle Glass Border */
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      /* Deep, diffused shadow */
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.05);
       text-align: center;
       max-width: 90%;
-      width: 360px;
+      width: 400px;
     }
-    .login-btn {
-      background: #4285F4;
-      color: white;
+
+    .login-box h1 {
+      /* Override any inline styles later via JS or specificity */
+      color: #1a1a1a !important;
+      letter-spacing: -0.5px;
+    }
+
+    .login-box p {
+      color: #555 !important;
+    }
+
+    .login-options-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-top: 24px;
+    }
+
+    /* Base Button Style */
+    .auth-btn-base {
       border: none;
-      padding: 12px 24px;
-      border-radius: 8px;
-      font-size: 1rem;
+      padding: 16px 24px;
+      border-radius: 16px;
+      /* More pill-like */
+      font-size: 0.95rem;
       font-weight: 600;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 10px;
+      gap: 12px;
       width: 100%;
-      margin-top: 20px;
-      transition: background 0.2s;
+      position: relative;
+      overflow: hidden;
+      font-family: 'Inter', system-ui, sans-serif;
+      transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
     }
-    .login-btn:hover { background: #357ae8; }
-    
+
+    .auth-btn-base:active {
+      transform: scale(0.97);
+    }
+
+    /* Primary: Google (Sleek Charcoal) */
+    .login-btn {
+      background: #111111;
+      color: white;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .login-btn:hover {
+      background: #000000;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+      transform: translateY(-2px);
+    }
+
+    /* Secondary: Phone (Glass / Outline) */
+    .phone-login-btn {
+      background: rgba(255, 255, 255, 0.6);
+      color: #333;
+      border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .phone-login-btn:hover {
+      background: white;
+      border-color: rgba(0, 0, 0, 0.1);
+      color: #000;
+      transform: translateY(-1px);
+    }
+
+
+
     /* USER HEADER */
     .user-header {
       display: flex;
@@ -460,6 +561,7 @@
       margin-left: auto;
       margin-right: auto;
     }
+
     .user-info {
       display: flex;
       align-items: center;
@@ -467,12 +569,14 @@
       font-size: 0.9rem;
       color: #5a6070;
     }
+
     .user-avatar {
       width: 32px;
       height: 32px;
       border-radius: 50%;
       background: #e0e3e8;
     }
+
     .logout-btn {
       font-size: 0.8rem;
       color: #ef4444;
@@ -553,7 +657,7 @@
     // Import the functions you need from the SDKs you need
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getDatabase, ref, set, push, onValue, remove, update, off } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-    import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, RecaptchaVerifier, signInWithPhoneNumber } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
     // TODO: Replace with your project's config object
     // You can find this in Firebase Console -> Project Settings -> General -> Your apps
@@ -582,39 +686,55 @@
 
     // --- INITIAL DATA SEEDING ---
     const INITIAL_SEED_DATA = [
-      // ... (Keep existing seed data for backup/init)
       // General / Home
       { name: 'Plates', store: 'General', count: 5 },
       { name: 'Spoons', store: 'General', count: 5 },
-      { name: 'Wine glass', store: 'General', count: 3 },
-      { name: 'Trash bags', store: 'General', count: 10 },
-      { name: 'Trash bin', store: 'General', count: 2 },
+      { name: 'Wine glass', store: 'General', count: 5 },
       { name: 'Cups', store: 'General', count: 5 },
+      { name: 'Trash bags', store: 'General', count: 10 },
+      { name: 'Trash bin', store: 'General', count: 1 },
       { name: 'Rain Jacket', store: 'General', count: 1 },
+
+      // TJ Maxx (Home Goods)
+      { name: 'Dining Chair', store: 'TJ Maxx', count: 2 },
+      { name: 'Knife', store: 'TJ Maxx', count: 1 },
+      { name: 'Can Opener', store: 'TJ Maxx', count: 1 },
+      { name: 'Wine Opener', store: 'TJ Maxx', count: 1 },
+      { name: 'Oven Mitts', store: 'TJ Maxx', count: 1 },
+      { name: 'Tupperware', store: 'TJ Maxx', count: 5 },
+      { name: 'Bath Mat', store: 'TJ Maxx', count: 1 },
+      { name: 'Hand Towels', store: 'TJ Maxx', count: 5 },
+      { name: 'Bathing Sponge', store: 'TJ Maxx', count: 2 },
+      { name: 'Broom and Dustpan', store: 'TJ Maxx', count: 1 },
+      { name: 'Laundry Hamper', store: 'TJ Maxx', count: 1 },
+
       // Costco
-      { name: 'Toilet paper', store: 'Costco', count: 20 },
-      { name: 'Paper towels', store: 'Costco', count: 18 },
-      { name: 'Kitchen napkin', store: 'Costco', count: 12 },
+      { name: 'Laundry Detergent', store: 'Costco', count: 5 },
+      { name: 'Toilet Paper', store: 'Costco', count: 20 },
+      { name: 'Paper Towels', store: 'Costco', count: 20 },
+      { name: 'Kitchen Napkin', store: 'Costco', count: 10 },
       { name: 'Coconut Water', store: 'Costco', count: 15 },
-      { name: 'Celsius', store: 'Costco', count: 12 },
-      { name: 'Kirkland Grilled Chicken Breast Skewers', store: 'Costco', count: 15 },
-      { name: 'Kirkland Wild Alaskan Sockeye Salmon', store: 'Costco', count: 12 },
+      { name: 'Celsius', store: 'Costco', count: 15 },
+      { name: 'Kirkland Grilled Chicken Breast Skewers', store: 'Costco', count: 10 },
+      { name: 'Kirkland Wild Alaskan Sockeye Salmon', store: 'Costco', count: 10 },
       { name: 'Kahiki Chicken Rice Bowls — Teriyaki', store: 'Costco', count: 8 },
       { name: 'Kirkland Rotisserie Chicken', store: 'Costco', count: 25 },
       { name: 'Bibigo Beef Pho Steamed Dumplings', store: 'Costco', count: 10 },
       { name: 'Kirkland Boneless Chicken Breasts (frozen)', store: 'Costco', count: 10 },
+
       // Trader Joe's
       { name: 'Eggs', store: "Trader Joe's", count: 30 },
-      { name: 'Butter', store: "Trader Joe's", count: 15 },
-      { name: 'Olive oil', store: "Trader Joe's", count: 8 },
-      { name: 'Salt & Pepper', store: "Trader Joe's", count: 5 },
-      { name: 'Branzino Fish', store: "Trader Joe's", count: 10 },
-      { name: 'Tikka Masala', store: "Trader Joe's", count: 12 },
-      { name: 'Argentinian Red Shrimp — Ginger Garlic Butter', store: "Trader Joe's", count: 10 },
-      { name: 'Wild Raw Argentinian Red Shrimp (1 lb bag)', store: "Trader Joe's", count: 10 },
-      { name: 'Pulled Chicken Salsa Verde', store: "Trader Joe's", count: 12 },
-      { name: 'Pre-Cooked Grilled Chicken Strips', store: "Trader Joe's", count: 12 },
-      { name: 'Bacon Cheddar Egg Bites', store: "Trader Joe's", count: 14 }
+      { name: 'Butter', store: "Trader Joe's", count: 20 },
+      { name: 'Olive oil', store: "Trader Joe's", count: 15 },
+      { name: 'Salt', store: "Trader Joe's", count: 10 },
+      { name: 'Pepper', store: "Trader Joe's", count: 10 },
+      { name: 'Branzino Fish', store: "Trader Joe's", count: 12 },
+      { name: 'Tikka Masala', store: "Trader Joe's", count: 15 },
+      { name: 'Argentinian Red Shrimp — Ginger Garlic Butter', store: "Trader Joe's", count: 12 },
+      { name: 'Wild Raw Argentinian Red Shrimp (1 lb bag)', store: "Trader Joe's", count: 12 },
+      { name: 'Pulled Chicken Salsa Verde', store: "Trader Joe's", count: 15 },
+      { name: 'Pre-Cooked Grilled Chicken Strips', store: "Trader Joe's", count: 15 },
+      { name: 'Bacon Cheddar Egg Bites', store: "Trader Joe's", count: 15 }
     ];
 
     // --- APP STATE ---
@@ -622,17 +742,34 @@
     window.activeList = [];
     window.suggestionDB = {};
 
-    // Store icon mapping - simplified
+    const STORE_ORDER = [
+      "Trader Joe's",
+      "Whole Foods",
+      "Costco",
+      "Safeway",
+      "Target",
+      "TJ Maxx",
+      "Amazon",
+      "IKEA",
+      "General"
+    ];
+
+    // Helper: Sort items by Store Order
+    const getStoreRank = (storeName) => {
+      const index = STORE_ORDER.indexOf(storeName);
+      return index === -1 ? 999 : index;
+    };
+
+    // Store icon mapping
     window.storeIcons = {
-      'TJ Maxx': { emoji: '🏬', color: '#991b1b' },
-      'Costco': { emoji: '🛒', color: '#003087' },
       "Trader Joe's": { emoji: '🛒', color: '#c1272d' },
-      'Target': { emoji: '🎯', color: '#cc0000' },
       'Whole Foods': { emoji: '🥬', color: '#00674f' },
+      'Costco': { emoji: '🛒', color: '#003087' },
       'Safeway': { emoji: '🛒', color: '#e31837' },
+      'Target': { emoji: '🎯', color: '#cc0000' },
+      'TJ Maxx': { emoji: '🏬', color: '#991b1b' },
       'Amazon': { emoji: '📦', color: '#ff9900' },
-      'IKEA': { emoji: '🪑', color: '#0058a3' },
-      'General': { emoji: '🏠', color: '#f97316' }
+      'General': { emoji: '🏠', color: '#f97316' } // Keep for existing data fallback
     };
 
     window.getStoreIcon = function (storeName) {
@@ -661,17 +798,79 @@
       });
     };
 
+    // --- PHONE AUTH LOGIC ---
+    window.recaptchaVerifier = null;
+    window.confirmationResult = null;
+
+    window.togglePhoneLogin = function () {
+      document.getElementById('main-login-options').style.display = 'none';
+      document.getElementById('phone-auth-container').style.display = 'flex';
+
+      // Initialize Recaptcha if not already done
+      if (!window.recaptchaVerifier) {
+        window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+          'size': 'normal',
+          'callback': (response) => {
+            // reCAPTCHA solved, allow signInWithPhoneNumber.
+          },
+          'expired-callback': () => {
+            // Response expired. Ask user to solve reCAPTCHA again.
+          }
+        });
+        window.recaptchaVerifier.render();
+      }
+    };
+
+    window.cancelPhoneLogin = function () {
+      document.getElementById('phone-auth-container').style.display = 'none';
+      document.getElementById('main-login-options').style.display = 'flex';
+      document.getElementById('otp-input-group').style.display = 'none';
+      document.getElementById('sendCodeBtn').style.display = 'block';
+    }
+
+    window.sendCode = function () {
+      const phoneNumber = document.getElementById('phoneNumberInput').value;
+      const appVerifier = window.recaptchaVerifier;
+
+      if (!phoneNumber) { alert("Please enter a phone number"); return; }
+
+      signInWithPhoneNumber(auth, phoneNumber, appVerifier)
+        .then((confirmationResult) => {
+          window.confirmationResult = confirmationResult;
+          alert("SMS sent! Please check your phone.");
+
+          document.getElementById('sendCodeBtn').style.display = 'none';
+          document.getElementById('otp-input-group').style.display = 'flex';
+        }).catch((error) => {
+          console.error("SMS Error", error);
+          alert("Error sending SMS: " + error.message);
+          if (window.recaptchaVerifier) window.recaptchaVerifier.clear();
+        });
+    }
+
+    window.verifyCode = function () {
+      const code = document.getElementById('otpInput').value;
+      if (!code) return;
+
+      window.confirmationResult.confirm(code).then((result) => {
+        const user = result.user;
+        console.log("Phone login success", user);
+      }).catch((error) => {
+        alert("Incorrect code. Please try again.");
+      });
+    }
+
     onAuthStateChanged(auth, (user) => {
       const overlay = document.getElementById('loginOverlay');
       const userHeader = document.getElementById('userHeader');
-      
+
       if (user) {
         currentUser = user;
         // 1. Hide Overlay
-        if(overlay) overlay.style.display = 'none';
-        
+        if (overlay) overlay.style.display = 'none';
+
         // 2. Show User info
-        if(userHeader) {
+        if (userHeader) {
           userHeader.style.display = 'flex';
           userHeader.innerHTML = `
             <div class="user-info">
@@ -692,8 +891,8 @@
       } else {
         // No user
         currentUser = null;
-        if(overlay) overlay.style.display = 'flex';
-        if(userHeader) userHeader.style.display = 'none';
+        if (overlay) overlay.style.display = 'flex';
+        if (userHeader) userHeader.style.display = 'none';
       }
     });
 
@@ -815,17 +1014,17 @@
     };
 
     window.removeItem = function (id) {
-       if (!currentUser) return;
+      if (!currentUser) return;
       remove(ref(db, `users/${currentUser.uid}/shoppingList/${id}`));
     };
 
     window.toggleItem = function (id, currentStatus) {
-       if (!currentUser) return;
+      if (!currentUser) return;
       update(ref(db, `users/${currentUser.uid}/shoppingList/${id}`), { checked: !currentStatus });
     };
 
     window.clearChecked = function () {
-       if (!currentUser) return;
+      if (!currentUser) return;
       // Find all checked items and remove them
       // This is not atomic, but fine for personal app.
       // Better: Create a 'updates' object to set null for all paths
@@ -839,7 +1038,7 @@
     };
 
     window.clearAll = function () {
-       if (!currentUser) return;
+      if (!currentUser) return;
       if (window.confirm('Are you sure you want to delete ALL items from the list?')) {
         set(listRef, null);
       }
@@ -878,7 +1077,7 @@
       });
 
       let html = '<div class="active-list">';
-      Object.keys(byStore).sort().forEach(storeName => {
+      Object.keys(byStore).sort((a, b) => getStoreRank(a) - getStoreRank(b)).forEach(storeName => {
         const icon = window.getStoreIcon(storeName);
         html += `
           <div class="store-group">
@@ -928,7 +1127,14 @@
       const topSuggestions = candidates.slice(0, 50);
 
       if (topSuggestions.length === 0) {
-        container.innerHTML = `<div style="text-align:center; color:#999; padding:20px;">No suggestions available. Add new items above and I'll remember them!</div>`;
+        container.innerHTML = `
+           <div style="text-align:center; color:#999; padding:20px;">
+             <p>No suggestions yet.</p>
+             <button onclick="populateSuggestions()" style="margin-top:10px; padding:8px 16px; background:#e0efff; color:#0066cc; border:none; border-radius:6px; cursor:pointer;">
+               Load Default Essentials
+             </button>
+           </div>
+        `;
         return;
       }
 
@@ -939,7 +1145,7 @@
       });
 
       let html = '';
-      Object.keys(byStore).sort().forEach(storeName => {
+      Object.keys(byStore).sort((a, b) => getStoreRank(a) - getStoreRank(b)).forEach(storeName => {
         const icon = window.getStoreIcon(storeName);
         html += `
           <div class="store-section">
@@ -947,97 +1153,142 @@
               <div class="store-icon" style="background: ${icon.color}">${icon.emoji}</div>
               <div>
                 <h2>${storeName}</h2>
-                <div class="item-count">${byStore[storeName].length} suggestions</div>
+                <div class="item-count">Suggested</div>
               </div>
             </div>
             <div class="suggestions-grid">
         `;
 
         byStore[storeName].forEach(item => {
+          const escapedName = item.name.replace(/'/g, "\\'");
+          const escapedStore = item.store.replace(/'/g, "\\'");
+
           html += `
-            <div class="item suggestion-item" onclick="addItem('${item.name.replace(/'/g, "\\'")}', '${item.store.replace(/'/g, "\\'")}')">
-              <div class="item-label">${item.name}</div>
+            <div class="item suggestion-item" onclick="addSuggestion('${escapedName}', '${escapedStore}')">
+              <span class="item-label" style="pointer-events: none;">${item.name}</span>
               <div class="suggestion-icon">+</div>
             </div>
           `;
         });
         html += '</div></div>';
       });
+
       container.innerHTML = html;
     };
 
+    window.addSuggestion = function (name, store) {
+      window.addItem(name, store);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
 
-    // --- EVENT LISTENERS ---
-    window.addEventListener('DOMContentLoaded', function () {
-      // Firebase listeners handle data loading and render
-      // renderAll() will be called when onValue triggers
-      // We set up the form submit listener here
-      const form = document.querySelector('.add-item-form');
-      const itemInput = document.getElementById('newItemInput');
-      const storeSelect = document.getElementById('storeSelect');
-      const newStoreInput = document.getElementById('newStoreInput');
+    // --- DOMContentLoaded ---
+    // Attached earlier stuff to window, now just set up listeners that aren't Firebase related
+    // Note: Firebase listeners start automatically.
 
-      // Populate Store Select
-      const updateStoreSelect = () => {
-        const stores = Object.keys(window.storeIcons).sort();
-        // Custom sort order logic
-        const priority = ['Trader Joe\'s', 'Costco', 'Amazon'];
-        stores.sort((a, b) => {
-          const idxA = priority.indexOf(a);
-          const idxB = priority.indexOf(b);
-          if (idxA !== -1 && idxB !== -1) return idxA - idxB;
-          if (idxA !== -1) return -1;
-          if (idxB !== -1) return 1;
-          return a.localeCompare(b);
-        });
+    // We don't need loadAppState() anymore.
 
-        // Current selection
-        const currentVal = storeSelect.value;
-        storeSelect.innerHTML = stores.map(s => `<option value="${s}">${s}</option>`).join('');
-        storeSelect.innerHTML += '<option value="Other">Other...</option>';
+    const addForm = document.getElementById('addItemForm');
+    const itemInput = document.getElementById('newItemInput');
+    const storeSelect = document.getElementById('storeSelect');
 
-        if (currentVal && stores.includes(currentVal)) {
-          storeSelect.value = currentVal;
-        } else if (currentVal === 'Other') {
-          storeSelect.value = 'Other';
-        } else {
-          storeSelect.value = "Trader Joe's"; // Default if not found
-        }
-      };
-      updateStoreSelect();
-
-      // Handle "Other" store
-      storeSelect.addEventListener('change', function () {
-        if (this.value === 'Other') {
-          newStoreInput.style.display = 'block';
-          newStoreInput.focus();
-        } else {
-          newStoreInput.style.display = 'none';
-        }
-      });
-
-      form.addEventListener('submit', function (e) {
-        e.preventDefault();
-        const item = itemInput.value;
-        let store = storeSelect.value;
-        if (store === 'Other') {
-          store = newStoreInput.value;
-          if (store && !window.storeIcons[store]) {
-            window.addCustomStore(store);
-          }
-        }
-        if (item && store) {
-          window.addItem(item, store);
-          itemInput.value = '';
-          // Reset store logic if desired, or keep last used
-          if (storeSelect.value === 'Other') {
-             storeSelect.value = "Trader Joe's";
-             newStoreInput.style.display = 'none';
-             newStoreInput.value = '';
-          }
-        }
-      });
+    addForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      window.addItem(itemInput.value, storeSelect.value);
+      itemInput.value = '';
+      itemInput.focus();
     });
+
+    storeSelect.addEventListener('change', function () {
+      if (this.value === 'custom') {
+        const customStore = prompt('Enter store name:');
+        if (customStore && customStore.trim()) {
+          const option = document.createElement('option');
+          option.value = customStore.trim();
+          option.textContent = customStore.trim();
+          option.selected = true;
+          this.insertBefore(option, this.querySelector('option[value="custom"]'));
+
+          window.addCustomStore(customStore.trim());
+        } else {
+          this.value = '';
+        }
+      }
+    });
+
+    // --- ADMIN / UTILITY FUNCTIONS ---
+
+    // 1. Fill Suggestion Database (Smart learning base)
+    window.populateSuggestions = function () {
+      if (!confirm("Populate your suggestions database with the Default Essentials list? This helps autosuggest work better.")) return;
+
+      const updates = {};
+      INITIAL_SEED_DATA.forEach(item => {
+        updates[item.name] = {
+          store: item.store,
+          count: item.count || 5,
+          lastUsed: Date.now()
+        };
+      });
+
+      update(suggestionsRef, updates)
+        .then(() => alert("Suggestions Populated! Start typing to see them."))
+        .catch(err => alert("Error: " + err.message));
+    };
+
+    // 2. Add All to Active List (Bulk Add)
+    window.addAllEssentialsToActiveList = function () {
+      if (!confirm("Add ALL default essential items to your active shopping list right now?")) return;
+
+      INITIAL_SEED_DATA.forEach(item => {
+        // Check for duplicates first? Nah, just push, user can delete.
+        // Actually, let's avoid duplicates if possible, but reading activeList is async/state based.
+        // We rely on window.activeList which is kept in sync.
+        const exists = window.activeList.some(i => i.name === item.name);
+        if (!exists) {
+          push(listRef, { name: item.name, store: item.store, checked: false });
+        }
+      });
+
+      alert("Items added to your list!");
+    };
+
+
+    // --- ADMIN DEBUGGER ---
+    window.loadAdminUser = function () {
+      const targetUid = document.getElementById('adminTargetUid').value.trim();
+      if (!targetUid) return;
+      if (!confirm(`Switch view to User ID: ${targetUid}?`)) return;
+
+      // Detach old listeners (simplest way is reload, but lets try live switch)
+      // Actually, standard firebase practice: ref change -> new listener
+      // But we have global refs. Let's update them.
+      off(listRef);
+      off(suggestionsRef);
+      off(iconsRef);
+
+      // Update Refs
+      listRef = ref(db, `users/${targetUid}/shoppingList`);
+      suggestionsRef = ref(db, `users/${targetUid}/suggestions`);
+      iconsRef = ref(db, `users/${targetUid}/storeIcons`);
+
+      // Clear current view
+      window.activeList = [];
+      window.suggestionDB = {};
+      renderActiveList();
+      renderSuggestions();
+
+      // Re-attach
+      setupListeners();
+
+      // Visual update
+      document.getElementById('userHeader').innerHTML = `
+        <div class="user-info" style="color: red;">
+           <span>⚠️ VIEWING: ${targetUid}</span>
+        </div>
+        <button class="logout-btn" onclick="location.reload()">Exit Admin</button>
+      `;
+    };
+
   </script>
 </head>
 
@@ -1046,51 +1297,142 @@
     <div class="login-box">
       <h1 style="color:#d4850f; margin-bottom:10px;">Shopping List</h1>
       <p style="color:#5a6070; margin-bottom:24px;">Sign in to sync your items across devices.</p>
-      <button class="login-btn" onclick="login()">
-        <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#fff" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"></path><path fill="#fff" d="M9 18c2.43 0 4.467-.806 5.956-2.180l-2.908-2.259c-.806.54-1.836.86-3.048.86-2.344 0-4.328-1.584-5.036-3.715H.957v2.332A8.997 8.997 0 0 1 9 18z" opacity=".2"></path><path fill="#fff" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" opacity=".4"></path><path fill="#fff" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 1 .957 4.958L3.964 7.29C4.672 5.159 6.656 3.58 9 3.58z" opacity=".2"></path></svg>
-        Sign in with Google
-      </button>
-    </div>
-  </div>
+      <div id="main-login-options" class="login-options-grid">
+        <button class="login-btn auth-btn-base" onclick="login()">
+          <span style="font-size: 1.2rem;">G</span> Sign in with Google
+        </button>
 
-  <div id="userHeader" class="user-header" style="display:none;"></div>
-
-
-  <div class="header">
-    <h1>Chris' <span class="highlight">Shopping List</span></h1>
-    <p>Smart, synced, and organized.</p>
-  </div>
-
-  <div class="add-item-section">
-    <h3>Add New Item</h3>
-    <form class="add-item-form">
-      <div class="add-item-row">
-        <input type="text" id="newItemInput" placeholder="What do you need?" required />
-        <select id="storeSelect">
-          <!-- Populated by JS -->
-        </select>
+        <button class="phone-login-btn auth-btn-base" onclick="togglePhoneLogin()">
+          📱 Sign in with Phone
+        </button>
       </div>
-      <input type="text" id="newStoreInput" placeholder="Enter store name..." style="display:none;" />
-      <button type="submit">Add to List</button>
-    </form>
-  </div>
 
-  <div id="activeListContainer">
-    <!-- Active items go here -->
-  </div>
+      <!-- Phone Auth Flow -->
+      <div id="phone-auth-container">
+        <p style="font-size: 0.9rem; color: #555;">Enter phone number (e.g., +15551234567)</p>
 
-  <div class="divider">
-    <span>Suggested For You</span>
-  </div>
+        <div class="phone-input-group">
+          <div id="recaptcha-container"></div>
 
-  <div id="suggestionsContainer">
-    <!-- Suggestions go here -->
-  </div>
+          <button id="sendCodeBtn" class="login-btn auth-btn-base" style="margin-top: 10px;" onclick="sendCode()">Send
+            SMS Code</button>
 
-  <div class="action-buttons">
-    <button onclick="clearChecked()">Clear Checked</button>
-    <button class="danger" onclick="clearAll()">Delete All</button>
-  </div>
+          <div id="otp-input-group" style="display: none; flex-direction: column; gap: 12px; margin-top: 10px;">
+            <input type="text" id="otpInput" placeholder="Enter 6-digit Code"
+              style="text-align: center; letter-spacing: 2px;" />
+            <button class="login-btn auth-btn-base" onclick="verifyCode()">Verify & Sign In</button>
+          </div>
+
+          <button class="secondary-btn" onclick="cancelPhoneLogin()">Cancel</button>
+        </div>
+        <svg width="18" height="18" viewBox="0 0 18 18">
+          <path fill="#fff"
+            d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z">
+          </path>
+          <path fill="#fff"
+            d="M9 18c2.43 0 4.467-.806 5.956-2.180l-2.908-2.259c-.806.54-1.836.86-3.048.86-2.344 0-4.328-1.584-5.036-3.715H.957v2.332A8.997 8.997 0 0 1 9 18z"
+            opacity=".2"></path>
+          <path fill="#fff"
+            d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"
+            opacity=".4"></path>
+          <path fill="#fff"
+            d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 1 .957 4.958L3.964 7.29C4.672 5.159 6.656 3.58 9 3.58z"
+            opacity=".2"></path>
+        </svg>
+        Sign in with Google
+        </button>
+      </div>
+    </div>
+
+    <div id="userHeader" class="user-header" style="display:none;"></div>
+
+
+    <div class="header">
+      <h1>Shopping <span class="highlight">List</span></h1>
+      <p>Your smart, learning shopping companion.</p>
+    </div>
+
+    <!-- ADD ITEM SECTION -->
+    <div class="add-item-section">
+      <h3>➕ Add Item</h3>
+      <form id="addItemForm" class="add-item-form">
+        <div class="add-item-row">
+          <input type="text" id="newItemInput" placeholder="e.g. Milk, Batteries..." required />
+          <select id="storeSelect" required>
+            <option value="">Store...</option>
+            <option value="Trader Joe's">Trader Joe's</option>
+            <option value="Whole Foods">Whole Foods</option>
+            <option value="Costco">Costco</option>
+            <option value="Safeway">Safeway</option>
+            <option value="Target">Target</option>
+            <option value="TJ Maxx">TJ Maxx</option>
+            <option value="Amazon">Amazon</option>
+            <option value="custom">+ New Store...</option>
+          </select>
+        </div>
+        <button type="submit">Add to List</button>
+      </form>
+    </div>
+
+    <!-- ACTIVE LIST -->
+    <div id="activeListContainer">
+      <!-- Filled by Javascript -->
+    </div>
+
+    <!-- ACTION BUTTONS -->
+    <div class="action-buttons">
+      <button onclick="clearChecked()">Clear Checked</button>
+      <button class="danger" onclick="clearAll()">Reset List</button>
+    </div>
+
+    <!-- DIVIDER -->
+    <div class="divider">
+      <span>Suggested For You</span>
+    </div>
+
+    <!-- SUGGESTIONS CONTAINER -->
+    <div id="suggestionsContainer">
+      <!-- Filled by Javascript -->
+    </div>
+
+    <div style="text-align: center; margin-top: 30px; color: #9ca3af; font-size: 0.8rem; padding-bottom: 20px;">
+      Shopping List App v1.1
+    </div>
+    <!-- ADMIN UI -->
+    <div style="margin: 40px auto; max-width: 660px; border-top: 1px dashed #ccc; padding-top: 20px;">
+      <details>
+        <summary style="cursor: pointer; color: #aaa; font-size: 0.8rem; user-select: none;">Admin & Recovery Tools
+        </summary>
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 10px; border: 1px solid #eee;">
+
+          <h4 style="margin-bottom: 10px; font-size: 0.9rem;">Data Tools</h4>
+          <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px;">
+            <button onclick="populateSuggestions()"
+              style="width: 100%; padding: 8px; background: #22c55e; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
+              Populate Suggestions DB (Hidden)
+            </button>
+            <button onclick="addAllEssentialsToActiveList()"
+              style="width: 100%; padding: 8px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
+              + Add All Essentials to List
+            </button>
+          </div>
+
+          <h4 style="margin-bottom: 10px; font-size: 0.9rem;">Admin View (Debug)</h4>
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="adminTargetUid" placeholder="Target User ID"
+              style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 6px;">
+            <button onclick="loadAdminUser()"
+              style="padding: 8px 16px; background: #ef4444; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
+              Load
+            </button>
+          </div>
+          <p style="font-size: 0.75rem; color: #666; margin-top: 6px;">
+            * Requires Database Rules allowing read access to other nodes.
+          </p>
+
+        </div>
+      </details>
+    </div>
 </body>
 
 </html>
