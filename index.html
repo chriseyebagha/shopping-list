@@ -76,7 +76,7 @@
     flex: 1;
   }
   .add-item-form select {
-    min-width: 140px;
+    min-width: 130px;
   }
   .add-item-form input:focus,
   .add-item-form select:focus {
@@ -198,12 +198,8 @@
     font-size: 1.3rem;
     flex-shrink: 0;
   }
+  /* Updated store colors */
   .store-icon.pending { background: #ef4444; }
-  .store-icon.tjmaxx { background: #991b1b; }
-  .store-icon.costco { background: #003087; }
-  .store-icon.tj { background: #c1272d; }
-  .store-icon.home { background: #f97316; }
-  .store-icon.tools { background: #57534e; }
   
   .store-header h2 {
     font-size: 1.1rem;
@@ -221,13 +217,22 @@
     border: 1px solid #e4e7ed;
     border-radius: 12px;
     padding: 14px 14px;
-    margin-bottom: 8px;
+    /* margin-bottom removed for grid, handled by gap */
     display: flex;
     gap: 12px;
     align-items: center;
-    transition: border-color 0.15s;
+    transition: all 0.15s;
   }
-  .item:hover { border-color: #c0c4cc; }
+  /* Active items still need margin bottom since they aren't in a grid yet, or strictly vertical */
+  .active-item {
+    margin-bottom: 8px;
+  }
+  
+  .item:hover { 
+    border-color: #c0c4cc; 
+    transform: translateY(-1px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+  }
 
   .item.active-item {
     background: #fffbf0;
@@ -340,25 +345,46 @@
   }
 
   .suggestion-item {
-    opacity: 0.85;
+    opacity: 0.9;
+    cursor: pointer;
   }
-  .suggestion-item:hover {
-    opacity: 1;
+  .suggestion-item:active {
+    transform: scale(0.98);
+    background: #f0f9ff;
+    border-color: #3b82f6;
+  }
+  
+  /* GRID LAYOUT FOR SUGGESTIONS */
+  .suggestions-grid {
+    display: grid;
+    grid-template-columns: 1fr; /* Default mobile 1 column if very small, but standard mobile usually fits 2 */
+    gap: 8px;
+  }
+  
+  @media (min-width: 380px) {
+    .suggestions-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  
+  @media (min-width: 600px) {
+    .suggestions-grid {
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    }
   }
 </style>
 <script>
 // --- INITIAL DATA SEEDING ---
-// This list is used only if the user has NO suggestion history.
-// It gives them a good starting point.
+// Consolidated stores: Home Depot, Hardware -> General
 const INITIAL_SEED_DATA = [
-  // Apartment Essentials
+  // Apartment Essentials (General)
   { name: 'Plunger 🪠', store: 'General', count: 10 },
   { name: 'Toilet Brush', store: 'General', count: 9 },
   { name: 'Shower Curtain & Liner', store: 'General', count: 9 },
   { name: 'First Aid Kit 🩹', store: 'General', count: 8 },
   { name: 'Flashlight & Batteries 🔦', store: 'General', count: 8 },
   { name: 'Extension Cords / Power Strips', store: 'General', count: 8 },
-  { name: 'Basic Tool Kit (Hammer, Screwdrivers)', store: 'Hardware Store', count: 8 },
+  { name: 'Basic Tool Kit (Hammer, Screwdrivers)', store: 'General', count: 8 },
   { name: 'Vacuum or Broom/Dustpan', store: 'Target', count: 8 },
   { name: 'Mop / Swiffer', store: 'Target', count: 8 },
   { name: 'All-Purpose Cleaner', store: 'Target', count: 10 },
@@ -374,7 +400,6 @@ const INITIAL_SEED_DATA = [
   { name: "Chef's Knife 🔪", store: 'TJ Maxx', count: 6 },
   { name: 'Cutting Board', store: 'TJ Maxx', count: 6 },
   { name: 'Can opener', store: 'TJ Maxx', count: 4 },
-  { name: 'Wine opener', store: 'TJ Maxx', count: 2 },
   { name: 'Oven mitts', store: 'TJ Maxx', count: 3 },
   { name: 'Tupperware', store: 'TJ Maxx', count: 8 },
   { name: 'Bath mat', store: 'TJ Maxx', count: 2 },
@@ -387,37 +412,30 @@ const INITIAL_SEED_DATA = [
   { name: 'Toilet paper', store: 'Costco', count: 20 },
   { name: 'Paper towels', store: 'Costco', count: 18 },
   { name: 'Kitchen napkin', store: 'Costco', count: 12 },
-  { name: 'Coco water', store: 'Costco', count: 10 },
-  { name: 'Celsius', store: 'Costco', count: 15 },
   { name: 'Laundry detergent', store: 'Costco', count: 12 },
   { name: 'Dish Soap & Sponges', store: 'Costco', count: 14 },
-  { name: 'Kirkland Grilled Chicken Breast Skewers', store: 'Costco', count: 15 },
-  { name: 'Kirkland Wild Alaskan Sockeye Salmon', store: 'Costco', count: 12 },
-  { name: 'Kahiki Chicken Rice Bowls — Teriyaki', store: 'Costco', count: 8 },
   { name: 'Kirkland Rotisserie Chicken', store: 'Costco', count: 25 },
-  { name: 'Bibigo Beef Pho Steamed Dumplings', store: 'Costco', count: 10 },
-  { name: 'Kirkland Boneless Chicken Breasts (frozen)', store: 'Costco', count: 15 },
+  { name: 'Kirkland Grilled Chicken Skewers', store: 'Costco', count: 15 },
+  { name: 'Salmon', store: 'Costco', count: 12 },
+  { name: 'Chicken Rice Bowls', store: 'Costco', count: 8 },
 
   // Trader Joe's
   { name: 'Eggs', store: "Trader Joe's", count: 30 },
   { name: 'Butter', store: "Trader Joe's", count: 15 },
   { name: 'Olive oil', store: "Trader Joe's", count: 8 },
-  { name: 'Salt', store: "Trader Joe's", count: 5 },
-  { name: 'Pepper', store: "Trader Joe's", count: 5 },
+  { name: 'Salt & Pepper', store: "Trader Joe's", count: 5 },
   { name: 'Branzino Fish', store: "Trader Joe's", count: 10 },
   { name: 'Tikka Masala', store: "Trader Joe's", count: 12 },
-  { name: 'Argentinian Red Shrimp', store: "Trader Joe's", count: 10 },
-  { name: 'Wild Raw Argentinian Red Shrimp (1 lb)', store: "Trader Joe's", count: 10 },
+  { name: 'Red Shrimp', store: "Trader Joe's", count: 10 },
   { name: 'Pulled Chicken Salsa Verde', store: "Trader Joe's", count: 12 },
-  { name: 'Pre-Cooked Grilled Chicken Strips', store: "Trader Joe's", count: 15 },
   { name: 'Bacon Cheddar Egg Bites', store: "Trader Joe's", count: 14 }
 ];
 
 // --- APP STATE ---
 let activeList = [];
-let suggestionDB = {}; // format: { "Item Name": { store: "Costco", count: 5, lastUsed: 123456789 } }
+let suggestionDB = {};
 
-// Store icon mapping
+// Store icon mapping - simplified
 const storeIcons = {
   'TJ Maxx': { emoji: '🏬', color: '#991b1b' },
   'Costco': { emoji: '🛒', color: '#003087' },
@@ -426,40 +444,43 @@ const storeIcons = {
   'Whole Foods': { emoji: '🥬', color: '#00674f' },
   'Safeway': { emoji: '🛒', color: '#e31837' },
   'Amazon': { emoji: '📦', color: '#ff9900' },
-  'Home Depot': { emoji: '🔨', color: '#f96302' },
   'IKEA': { emoji: '🪑', color: '#0058a3' },
-  'Hardware Store': { emoji: '🛠️', color: '#57534e' },
   'General': { emoji: '🏠', color: '#f97316' }
 };
 
 function getStoreIcon(storeName) {
   if (storeIcons[storeName]) return storeIcons[storeName];
-  return { emoji: '🛒', color: '#6b7280' };
+  return { emoji: '🛍️', color: '#6b7280' };
 }
 
 // --- PERSISTENCE ---
 function saveAppState() {
-  localStorage.setItem('activeShoppingList', JSON.stringify(activeList));
-  localStorage.setItem('shoppingListSuggestionsDB', JSON.stringify(suggestionDB));
-  localStorage.setItem('storeIcons', JSON.stringify(storeIcons));
+  try {
+    localStorage.setItem('activeShoppingList', JSON.stringify(activeList));
+    localStorage.setItem('shoppingListSuggestionsDB', JSON.stringify(suggestionDB));
+    localStorage.setItem('storeIcons', JSON.stringify(storeIcons));
+  } catch (e) {
+    console.error("Local Storage Error:", e);
+    alert("Warning: Could not save list. Private browsing mode?");
+  }
 }
 
 function loadAppState() {
-  // Load Active List
-  const savedActive = localStorage.getItem('activeShoppingList');
-  if (savedActive) activeList = JSON.parse(savedActive);
+  try {
+    const savedActive = localStorage.getItem('activeShoppingList');
+    if (savedActive) activeList = JSON.parse(savedActive);
 
-  // Load Icons
-  const savedIcons = localStorage.getItem('storeIcons');
-  if (savedIcons) Object.assign(storeIcons, JSON.parse(savedIcons));
+    const savedIcons = localStorage.getItem('storeIcons');
+    if (savedIcons) Object.assign(storeIcons, JSON.parse(savedIcons));
 
-  // Load Suggestions
-  const savedDB = localStorage.getItem('shoppingListSuggestionsDB');
-  if (savedDB) {
-    suggestionDB = JSON.parse(savedDB);
-  } else {
-    // SEED DB if empty
-    seedDatabase();
+    const savedDB = localStorage.getItem('shoppingListSuggestionsDB');
+    if (savedDB) {
+      suggestionDB = JSON.parse(savedDB);
+    } else {
+      seedDatabase();
+    }
+  } catch (e) {
+    console.error("Local Storage Error:", e);
   }
 }
 
@@ -482,29 +503,29 @@ function addItem(itemName, storeName) {
   itemName = itemName.trim();
   storeName = storeName.trim();
 
-  // 1. Add to Active List
+  // Check for duplicate in active list to avoid double add
+  const exists = activeList.some(i => i.name.toLowerCase() === itemName.toLowerCase() && i.store === storeName);
+  if (exists) {
+    alert(`"${itemName}" is already in your list!`);
+    return;
+  }
+
   activeList.push({ name: itemName, store: storeName, checked: false });
-
-  // 2. Update Knowledge Base (Smart Learning)
   updateItemStats(itemName, storeName);
-
   saveAppState();
   renderAll();
 }
 
 function updateItemStats(itemName, storeName) {
   if (!suggestionDB[itemName]) {
-    // New item learned!
     suggestionDB[itemName] = {
       store: storeName,
       count: 1,
       lastUsed: Date.now()
     };
   } else {
-    // Existing item reinforced
     suggestionDB[itemName].count++;
     suggestionDB[itemName].lastUsed = Date.now();
-    // Update store if they changed it, or keep old? Let's update it to latest preference.
     suggestionDB[itemName].store = storeName;
   }
 }
@@ -512,24 +533,27 @@ function updateItemStats(itemName, storeName) {
 function removeItem(index) {
   activeList.splice(index, 1);
   saveAppState();
-  renderActiveList(); // No need to re-render suggestions
+  renderActiveList();
 }
 
 function toggleItem(index) {
   activeList[index].checked = !activeList[index].checked;
   saveAppState();
-  // Optional: Checking an item could also boost its stats? 
-  // For now, only ADDING boosts stats to keep it simple.
 }
 
+// Fixed Logic for Clear Buttons
 function clearChecked() {
-  activeList = activeList.filter(item => !item.checked);
-  saveAppState();
-  renderActiveList();
+  if (activeList.some(i => i.checked)) {
+      activeList = activeList.filter(item => !item.checked);
+      saveAppState();
+      renderActiveList();
+  }
 }
 
 function clearAll() {
-  if (confirm('Clear your entire shopping list?')) {
+  // Use a simple confirm. If it fails on some devices, user can just delete items manually,
+  // but standard confirm is best practice.
+  if (window.confirm('Are you sure you want to delete ALL items from the list?')) {
     activeList = [];
     saveAppState();
     renderActiveList();
@@ -551,7 +575,7 @@ function renderActiveList() {
     return;
   }
   
-  // Group items by store
+  // Group by store
   const byStore = {};
   activeList.forEach((item, idx) => {
     if (!byStore[item.store]) byStore[item.store] = [];
@@ -584,49 +608,40 @@ function renderActiveList() {
     html += '</div>';
   });
   html += '</div>';
-  
   container.innerHTML = html;
 }
 
 function renderSuggestions() {
   const container = document.getElementById('suggestionsContainer');
-  
-  // 1. Check if items are already in active list (to hide them)
   const activeNames = new Set(activeList.map(i => i.name));
 
-  // 2. Convert DB to Array
   let candidates = Object.entries(suggestionDB).map(([name, data]) => ({
     name: name,
     ...data
   }));
 
-  // 3. Filter out things already in the list
+  // Filter out active items
   candidates = candidates.filter(item => !activeNames.has(item.name));
 
-  // 4. SORT ALGORITHM
-  // Priority 1: High Count (Frequency)
-  // Priority 2: Recency (Last Used)
+  // SMART SORT: Frequency desc, then Recency desc
   candidates.sort((a, b) => {
     if (b.count !== a.count) return b.count - a.count;
     return b.lastUsed - a.lastUsed;
   });
 
-  // 5. Limit to Top 50
   const topSuggestions = candidates.slice(0, 50);
 
   if (topSuggestions.length === 0) {
-    container.innerHTML = '<div style="text-align:center; color:#999; padding:20px;">No suggestions available yet.</div>';
+    container.innerHTML = '<div style="text-align:center; color:#999; padding:20px;">No suggestions available. Add new items above and I\'ll remember them!</div>';
     return;
   }
 
-  // 6. Group by Store
   const byStore = {};
   topSuggestions.forEach(item => {
     if (!byStore[item.store]) byStore[item.store] = [];
     byStore[item.store].push(item);
   });
 
-  // 7. Render
   let html = '';
   Object.keys(byStore).sort().forEach(storeName => {
     const icon = getStoreIcon(storeName);
@@ -639,26 +654,24 @@ function renderSuggestions() {
             <div class="item-count">Suggested</div>
           </div>
         </div>
+        <div class="suggestions-grid">
     `;
     
     byStore[storeName].forEach(item => {
-      // Escape single quotes for the onclick handler
       const escapedName = item.name.replace(/'/g, "\\'");
       const escapedStore = item.store.replace(/'/g, "\\'");
       
       html += `
         <div class="item suggestion-item" onclick="addSuggestion('${escapedName}', '${escapedStore}')">
-          <span class="item-label" style="cursor: pointer;">${item.name}</span>
+          <span class="item-label" style="pointer-events: none;">➕ ${item.name}</span>
         </div>
       `;
     });
-    html += '</div>';
+    html += '</div></div>'; // Close grid and section
   });
 
   container.innerHTML = html;
 }
-
-// --- EVENT HANDLERS ---
 
 function addSuggestion(name, store) {
   addItem(name, store);
@@ -680,9 +693,9 @@ window.addEventListener('DOMContentLoaded', function() {
     itemInput.focus();
   });
   
-  // Custom store handler
   storeSelect.addEventListener('change', function() {
     if (this.value === 'custom') {
+      // Use simple default specific stores or 'General' as fallback if cancel
       const customStore = prompt('Enter store name:');
       if (customStore && customStore.trim()) {
         const option = document.createElement('option');
@@ -691,7 +704,6 @@ window.addEventListener('DOMContentLoaded', function() {
         option.selected = true;
         this.insertBefore(option, this.querySelector('option[value="custom"]'));
         
-        // Save new store icon color if needed (random/default for now)
         if (!storeIcons[customStore.trim()]) {
           storeIcons[customStore.trim()] = { emoji: '🛍️', color: '#6b7280' };
         }
@@ -701,19 +713,8 @@ window.addEventListener('DOMContentLoaded', function() {
     }
   });
 
-  // Touch support for mobile suggestions
-  setTimeout(() => {
-    const container = document.getElementById('suggestionsContainer');
-    container.addEventListener('touchend', function(e) {
-      // Delegate touch event
-      const itemRow = e.target.closest('.suggestion-item');
-      if (itemRow) {
-        e.preventDefault();
-        // Trigger the click logic
-        itemRow.click();
-      }
-    });
-  }, 500);
+  // Touch support is redundant with onclick usually, but kept for legacy webviews
+  // Removing touch event listener to avoid double-firing as onclick works fine on mobile modern browsers
 });
 </script>
 </head>
@@ -721,7 +722,7 @@ window.addEventListener('DOMContentLoaded', function() {
 
 <div class="header">
   <h1>Shopping <span class="highlight">List</span></h1>
-  <p>Add items or pick from your most frequent purchases below</p>
+  <p>Your smart, learning shopping companion.</p>
 </div>
 
 <!-- ADD ITEM SECTION -->
@@ -729,16 +730,15 @@ window.addEventListener('DOMContentLoaded', function() {
   <h3>➕ Add Item</h3>
   <form id="addItemForm" class="add-item-form">
     <div class="add-item-row">
-      <input type="text" id="newItemInput" placeholder="Item name..." required/>
+      <input type="text" id="newItemInput" placeholder="e.g. Milk, Batteries..." required/>
       <select id="storeSelect" required>
         <option value="">Store...</option>
+        <option value="General">General</option>
         <option value="TJ Maxx">TJ Maxx</option>
         <option value="Costco">Costco</option>
         <option value="Trader Joe's">Trader Joe's</option>
         <option value="Target">Target</option>
-        <option value="Home Depot">Home Depot</option>
-        <option value="Hardware Store">Hardware Store</option>
-        <option value="General">General</option>
+        <option value="Amazon">Amazon</option>
         <option value="custom">+ New Store...</option>
       </select>
     </div>
@@ -753,17 +753,16 @@ window.addEventListener('DOMContentLoaded', function() {
 
 <!-- ACTION BUTTONS -->
 <div class="action-buttons">
-  <button onclick="clearChecked()">Remove Checked Items</button>
-  <button class="danger" onclick="clearAll()">Clear Entire List</button>
+  <button onclick="clearChecked()">Clear Checked</button>
+  <button class="danger" onclick="clearAll()">Reset List</button>
 </div>
 
 <!-- DIVIDER -->
 <div class="divider">
-  <span>Suggested Items (Top 50)</span>
+  <span>Suggested For You</span>
 </div>
 
 <!-- SUGGESTIONS CONTAINER -->
-<!-- Now fully dynamic -->
 <div id="suggestionsContainer">
   <!-- Filled by Javascript -->
 </div>
