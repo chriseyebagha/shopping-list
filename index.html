@@ -1312,6 +1312,7 @@
         <p style="font-size: 0.9rem; color: #555;">Enter phone number (e.g., +15551234567)</p>
 
         <div class="phone-input-group">
+          <input type="tel" id="phoneNumberInput" placeholder="+1..." style="flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 6px;" />
           <div id="recaptcha-container"></div>
 
           <button id="sendCodeBtn" class="login-btn auth-btn-base" style="margin-top: 10px;" onclick="sendCode()">Send
@@ -1342,6 +1343,7 @@
         Sign in with Google
         </button>
       </div>
+    </div>
     </div>
 
     <div id="userHeader" class="user-header" style="display:none;"></div>
@@ -1426,7 +1428,7 @@
               Load
             </button>
           </div>
-          <p style="font-size: 0.75rem; color: #666; margin-top: 6px;">
+          <p style="font-size: 0.75rem; color: #666; margin-top: 66;">
             * Requires Database Rules allowing read access to other nodes.
           </p>
 
