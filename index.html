@@ -1,600 +1,713 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Shopping List</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-<style>
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shopping List</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-  body {
-    font-family: 'Inter', sans-serif;
-    background-color: #f4f6f8;
-    color: #1a1d24;
-    padding: 24px 16px 72px;
-    min-height: 100vh;
-  }
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f4f6f8;
+      color: #1a1d24;
+      padding: 24px 16px 72px;
+      min-height: 100vh;
+    }
 
-  .header {
-    max-width: 660px;
-    margin: 0 auto 20px;
-    text-align: center;
-  }
-  .header h1 {
-    font-size: 1.8rem;
-    font-weight: 700;
-    color: #1a1d24;
-    line-height: 1.3;
-    margin-bottom: 6px;
-  }
-  .header h1 .highlight { color: #d4850f; }
-  .header p {
-    font-size: 0.88rem;
-    color: #5a6070;
-    line-height: 1.5;
-  }
+    .header {
+      max-width: 660px;
+      margin: 0 auto 20px;
+      text-align: center;
+    }
 
-  /* Add item section */
-  .add-item-section {
-    max-width: 660px;
-    margin: 0 auto 16px;
-    background: #ffffff;
-    border: 2px solid #d4850f;
-    border-radius: 12px;
-    padding: 16px;
-  }
-  .add-item-section h3 {
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: #1a1d24;
-    margin-bottom: 12px;
-  }
-  .add-item-form {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-  .add-item-row {
-    display: flex;
-    gap: 8px;
-  }
-  .add-item-form input,
-  .add-item-form select {
-    font-family: 'Inter', sans-serif;
-    font-size: 0.9rem;
-    padding: 10px 12px;
-    border: 1px solid #e4e7ed;
-    border-radius: 8px;
-    background: #f9fafb;
-  }
-  .add-item-form input {
-    flex: 1;
-  }
-  .add-item-form select {
-    min-width: 130px;
-  }
-  .add-item-form input:focus,
-  .add-item-form select:focus {
-    outline: none;
-    border-color: #d4850f;
-    background: #fff;
-  }
-  .add-item-form button {
-    font-family: 'Inter', sans-serif;
-    font-size: 0.88rem;
-    font-weight: 600;
-    padding: 10px 20px;
-    background: #d4850f;
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    white-space: nowrap;
-  }
-  .add-item-form button:active {
-    transform: scale(0.98);
-  }
+    .header h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #1a1d24;
+      line-height: 1.3;
+      margin-bottom: 6px;
+    }
 
-  /* Active list section */
-  .active-list {
-    max-width: 660px;
-    margin: 0 auto 32px;
-  }
-  .active-list-empty {
-    background: #ffffff;
-    border: 1px solid #e4e7ed;
-    border-radius: 12px;
-    padding: 40px 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #9a9fad;
-    font-size: 0.88rem;
-    font-style: italic;
-    text-align: center;
-  }
+    .header h1 .highlight {
+      color: #d4850f;
+    }
 
-  .store-group {
-    background: #ffffff;
-    border: 1px solid #e4e7ed;
-    border-radius: 12px;
-    padding: 16px;
-    margin-bottom: 16px;
-  }
-  .store-group-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 12px;
-    padding-bottom: 8px;
-    border-bottom: 2px solid #f0f2f5;
-  }
-  .store-group-icon {
-    width: 36px;
-    height: 36px;
-    border-radius: 9px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.1rem;
-    flex-shrink: 0;
-  }
-  .store-group-name {
-    font-size: 1rem;
-    font-weight: 700;
-    color: #1a1d24;
-  }
+    .header p {
+      font-size: 0.88rem;
+      color: #5a6070;
+      line-height: 1.5;
+    }
 
-  .divider {
-    max-width: 660px;
-    margin: 40px auto;
-    text-align: center;
-    position: relative;
-  }
-  .divider::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 50%;
-    height: 1px;
-    background: #e0e3e8;
-  }
-  .divider span {
-    position: relative;
-    background: #f4f6f8;
-    padding: 0 16px;
-    font-size: 0.82rem;
-    font-weight: 600;
-    color: #7a8290;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
+    /* Add item section */
+    .add-item-section {
+      max-width: 660px;
+      margin: 0 auto 16px;
+      background: #ffffff;
+      border: 2px solid #d4850f;
+      border-radius: 12px;
+      padding: 16px;
+    }
 
-  .store-section {
-    max-width: 660px;
-    margin: 0 auto 28px;
-  }
-  .store-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 12px;
-    padding-bottom: 10px;
-    border-bottom: 2px solid #e0e3e8;
-  }
-  .store-icon {
-    width: 42px;
-    height: 42px;
-    border-radius: 11px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.3rem;
-    flex-shrink: 0;
-  }
-  /* Updated store colors */
-  .store-icon.pending { background: #ef4444; }
-  
-  .store-header h2 {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: #1a1d24;
-  }
-  .store-header .item-count {
-    font-size: 0.78rem;
-    color: #7a8290;
-    margin-top: 2px;
-  }
+    .add-item-section h3 {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #1a1d24;
+      margin-bottom: 12px;
+    }
 
-  .item {
-    background: #ffffff;
-    border: 1px solid #e4e7ed;
-    border-radius: 12px;
-    padding: 14px 14px;
-    /* margin-bottom removed for grid, handled by gap */
-    display: flex;
-    gap: 12px;
-    align-items: center;
-    transition: all 0.15s;
-  }
-  /* Active items still need margin bottom since they aren't in a grid yet, or strictly vertical */
-  .active-item {
-    margin-bottom: 8px;
-  }
-  
-  .item:hover { 
-    border-color: #c0c4cc; 
-    transform: translateY(-1px);
-    box-shadow: 0 2px 5px rgba(0,0,0,0.03);
-  }
+    .add-item-form {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
 
-  .item.active-item {
-    background: #fffbf0;
-    border-color: #f0d88a;
-  }
+    .add-item-row {
+      display: flex;
+      gap: 8px;
+    }
 
-  /* Hide default checkbox */
-  .item input[type="checkbox"] {
-    position: absolute;
-    opacity: 0;
-    cursor: pointer;
-  }
+    .add-item-form input,
+    .add-item-form select {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
+      padding: 10px 12px;
+      border: 1px solid #e4e7ed;
+      border-radius: 8px;
+      background: #f9fafb;
+    }
 
-  /* Custom checkbox */
-  .checkmark {
-    width: 22px;
-    height: 22px;
-    border-radius: 6px;
-    border: 2px solid #c8ccd5;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #fff;
-    transition: all 0.2s;
-  }
+    .add-item-form input {
+      flex: 1;
+    }
 
-  .checkmark svg {
-    opacity: 0;
-    transition: opacity 0.2s;
-  }
+    .add-item-form select {
+      min-width: 130px;
+    }
 
-  .item input[type="checkbox"]:checked ~ .checkmark {
-    background: #22c55e;
-    border-color: #22c55e;
-  }
+    .add-item-form input:focus,
+    .add-item-form select:focus {
+      outline: none;
+      border-color: #d4850f;
+      background: #fff;
+    }
 
-  .item input[type="checkbox"]:checked ~ .checkmark svg {
-    opacity: 1;
-  }
+    .add-item-form button {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 600;
+      padding: 10px 20px;
+      background: #d4850f;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
 
-  .item input[type="checkbox"]:checked ~ .item-label {
-    text-decoration: line-through;
-    color: #9a9fad;
-  }
+    .add-item-form button:active {
+      transform: scale(0.98);
+    }
 
-  .item input[type="checkbox"]:checked ~ .item-label,
-  .item input[type="checkbox"]:checked ~ .checkmark {
-    opacity: 0.4;
-  }
+    /* Active list section */
+    .active-list {
+      max-width: 660px;
+      margin: 0 auto 32px;
+    }
 
-  .item-label {
-    font-size: 0.95rem;
-    font-weight: 500;
-    color: #1a1d24;
-    line-height: 1.4;
-    flex: 1;
-    cursor: pointer;
-    -webkit-user-select: none;
-    user-select: none;
-  }
+    .active-list-empty {
+      background: #ffffff;
+      border: 1px solid #e4e7ed;
+      border-radius: 12px;
+      padding: 40px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #9a9fad;
+      font-size: 0.88rem;
+      font-style: italic;
+      text-align: center;
+    }
 
-  .item label {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-    cursor: pointer;
-    flex: 1;
-  }
+    .store-group {
+      background: #ffffff;
+      border: 1px solid #e4e7ed;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
 
-  .delete-btn {
-    background: #fee;
-    border: 1px solid #fcc;
-    color: #c00;
-    border-radius: 6px;
-    padding: 6px 12px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    cursor: pointer;
-    flex-shrink: 0;
-  }
-  .delete-btn:active {
-    transform: scale(0.95);
-  }
+    .store-group-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #f0f2f5;
+    }
 
-  .action-buttons {
-    max-width: 660px;
-    margin: 20px auto 0;
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-    flex-wrap: wrap;
-  }
-  .action-buttons button {
-    background: #ffffff;
-    border: 1px solid #e4e7ed;
-    border-radius: 10px;
-    padding: 12px 24px;
-    font-family: 'Inter', sans-serif;
-    font-size: 0.88rem;
-    font-weight: 600;
-    color: #5a6070;
-    cursor: pointer;
-  }
-  .action-buttons button.danger {
-    color: #ef4444;
-  }
-  .action-buttons button:active {
-    transform: scale(0.98);
-  }
+    .store-group-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
 
-  .suggestion-item {
-    opacity: 0.9;
-    cursor: pointer;
-  }
-  .suggestion-item:active {
-    transform: scale(0.98);
-    background: #f0f9ff;
-    border-color: #3b82f6;
-  }
-  
-  /* GRID LAYOUT FOR SUGGESTIONS */
-  .suggestions-grid {
-    display: grid;
-    grid-template-columns: 1fr; /* Default mobile 1 column if very small, but standard mobile usually fits 2 */
-    gap: 8px;
-  }
-  
-  @media (min-width: 380px) {
+    .store-group-name {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #1a1d24;
+    }
+
+    .divider {
+      max-width: 660px;
+      margin: 40px auto;
+      text-align: center;
+      position: relative;
+    }
+
+    .divider::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 50%;
+      height: 1px;
+      background: #e0e3e8;
+    }
+
+    .divider span {
+      position: relative;
+      background: #f4f6f8;
+      padding: 0 16px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #7a8290;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .store-section {
+      max-width: 660px;
+      margin: 0 auto 28px;
+    }
+
+    .store-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #e0e3e8;
+    }
+
+    .store-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      flex-shrink: 0;
+    }
+
+    /* Updated store colors */
+    .store-icon.pending {
+      background: #ef4444;
+    }
+
+    .store-header h2 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #1a1d24;
+    }
+
+    .store-header .item-count {
+      font-size: 0.78rem;
+      color: #7a8290;
+      margin-top: 2px;
+    }
+
+    .item {
+      background: #ffffff;
+      border: 1px solid #e4e7ed;
+      border-radius: 12px;
+      padding: 14px 14px;
+      /* margin-bottom removed for grid, handled by gap */
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      transition: all 0.15s;
+    }
+
+    /* Active items still need margin bottom since they aren't in a grid yet, or strictly vertical */
+    .active-item {
+      margin-bottom: 8px;
+    }
+
+    .item:hover {
+      border-color: #c0c4cc;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
+    }
+
+    .item.active-item {
+      background: #fffbf0;
+      border-color: #f0d88a;
+    }
+
+    /* Hide default checkbox */
+    .item input[type="checkbox"] {
+      position: absolute;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    /* Custom checkbox */
+    .checkmark {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      border: 2px solid #c8ccd5;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #fff;
+      transition: all 0.2s;
+    }
+
+    .checkmark svg {
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .item input[type="checkbox"]:checked~.checkmark {
+      background: #22c55e;
+      border-color: #22c55e;
+    }
+
+    .item input[type="checkbox"]:checked~.checkmark svg {
+      opacity: 1;
+    }
+
+    .item input[type="checkbox"]:checked~.item-label {
+      text-decoration: line-through;
+      color: #9a9fad;
+    }
+
+    .item input[type="checkbox"]:checked~.item-label,
+    .item input[type="checkbox"]:checked~.checkmark {
+      opacity: 0.4;
+    }
+
+    .item-label {
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: #1a1d24;
+      line-height: 1.4;
+      flex: 1;
+      cursor: pointer;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    .item label {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      cursor: pointer;
+      flex: 1;
+    }
+
+    .delete-btn {
+      background: #fee;
+      border: 1px solid #fcc;
+      color: #c00;
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .delete-btn:active {
+      transform: scale(0.95);
+    }
+
+    .action-buttons {
+      max-width: 660px;
+      margin: 20px auto 0;
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .action-buttons button {
+      background: #ffffff;
+      border: 1px solid #e4e7ed;
+      border-radius: 10px;
+      padding: 12px 24px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: #5a6070;
+      cursor: pointer;
+    }
+
+    .action-buttons button.danger {
+      color: #ef4444;
+    }
+
+    .action-buttons button:active {
+      transform: scale(0.98);
+    }
+
+    .suggestion-item {
+      opacity: 0.9;
+      opacity: 0.9;
+      cursor: pointer;
+      justify-content: space-between;
+      /* Push icon to the right */
+      padding-right: 12px;
+    }
+
+    .suggestion-item:active {
+      transform: scale(0.98);
+      background: #f0f9ff;
+      border-color: #3b82f6;
+    }
+
+    .suggestion-icon {
+      /* New minimal design: No background, subtle color, right aligned */
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      margin-left: 8px;
+      /* Space from text */
+      margin-right: 0;
+      color: #9ca3af;
+      /* Light grey default */
+      font-size: 18px;
+      font-weight: 300;
+      /* Thinner */
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .item-label {
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: #1a1d24;
+      line-height: 1.35;
+      flex: 1;
+      cursor: pointer;
+      -webkit-user-select: none;
+      user-select: none;
+      word-wrap: break-word;
+      /* Ensure different browsers handle long words */
+      overflow-wrap: break-word;
+    }
+
+    .suggestion-item:hover .suggestion-icon {
+      color: #d4850f;
+      /* Brand color on hover */
+      transform: scale(1.1);
+      /* Slight grow instead of rotate */
+      background: transparent;
+    }
+
+    /* Active List Grid Layout */
+    .active-items-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      width: 100%;
+      /* Force full width */
+    }
+
+    @media (min-width: 320px) {
+      .active-items-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+      }
+    }
+
+    /* Update styling for active items in grid */
+    .active-item {
+      margin-bottom: 0;
+      /* Removing margin as grid gap handles spacing */
+      height: 100%;
+      /* Ensure equal height */
+    }
+
+    /* GRID LAYOUT FOR SUGGESTIONS */
     .suggestions-grid {
-      grid-template-columns: repeat(2, 1fr);
+      display: grid;
+      grid-template-columns: 1fr;
+      /* Default mobile 1 column if very small, but standard mobile usually fits 2 */
+      gap: 8px;
     }
-  }
-  
-  @media (min-width: 600px) {
-    .suggestions-grid {
-      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+
+    @media (min-width: 380px) {
+      .suggestions-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
     }
-  }
-</style>
-<script>
-// --- INITIAL DATA SEEDING ---
-// Consolidated stores: Home Depot, Hardware -> General
-const INITIAL_SEED_DATA = [
-  // Apartment Essentials (General)
-  { name: 'Plunger 🪠', store: 'General', count: 10 },
-  { name: 'Toilet Brush', store: 'General', count: 9 },
-  { name: 'Shower Curtain & Liner', store: 'General', count: 9 },
-  { name: 'First Aid Kit 🩹', store: 'General', count: 8 },
-  { name: 'Flashlight & Batteries 🔦', store: 'General', count: 8 },
-  { name: 'Extension Cords / Power Strips', store: 'General', count: 8 },
-  { name: 'Basic Tool Kit (Hammer, Screwdrivers)', store: 'General', count: 8 },
-  { name: 'Vacuum or Broom/Dustpan', store: 'Target', count: 8 },
-  { name: 'Mop / Swiffer', store: 'Target', count: 8 },
-  { name: 'All-Purpose Cleaner', store: 'Target', count: 10 },
 
-  // TJ Maxx
-  { name: 'Plates', store: 'TJ Maxx', count: 5 },
-  { name: 'Spoons', store: 'TJ Maxx', count: 5 },
-  { name: 'Wine glass', store: 'TJ Maxx', count: 3 },
-  { name: 'Trash bags', store: 'TJ Maxx', count: 10 },
-  { name: 'Trash bin', store: 'TJ Maxx', count: 2 },
-  { name: 'Cups', store: 'TJ Maxx', count: 5 },
-  { name: 'Rain Jacket', store: 'TJ Maxx', count: 1 },
-  { name: "Chef's Knife 🔪", store: 'TJ Maxx', count: 6 },
-  { name: 'Cutting Board', store: 'TJ Maxx', count: 6 },
-  { name: 'Can opener', store: 'TJ Maxx', count: 4 },
-  { name: 'Oven mitts', store: 'TJ Maxx', count: 3 },
-  { name: 'Tupperware', store: 'TJ Maxx', count: 8 },
-  { name: 'Bath mat', store: 'TJ Maxx', count: 2 },
-  { name: 'Hand towels', store: 'TJ Maxx', count: 5 },
-  { name: 'Bathing sponge', store: 'TJ Maxx', count: 6 },
-  { name: 'Laundry hamper', store: 'TJ Maxx', count: 2 },
-  { name: 'Hangers (Pack)', store: 'TJ Maxx', count: 4 },
-
-  // Costco
-  { name: 'Toilet paper', store: 'Costco', count: 20 },
-  { name: 'Paper towels', store: 'Costco', count: 18 },
-  { name: 'Kitchen napkin', store: 'Costco', count: 12 },
-  { name: 'Laundry detergent', store: 'Costco', count: 12 },
-  { name: 'Dish Soap & Sponges', store: 'Costco', count: 14 },
-  { name: 'Kirkland Rotisserie Chicken', store: 'Costco', count: 25 },
-  { name: 'Kirkland Grilled Chicken Skewers', store: 'Costco', count: 15 },
-  { name: 'Salmon', store: 'Costco', count: 12 },
-  { name: 'Chicken Rice Bowls', store: 'Costco', count: 8 },
-
-  // Trader Joe's
-  { name: 'Eggs', store: "Trader Joe's", count: 30 },
-  { name: 'Butter', store: "Trader Joe's", count: 15 },
-  { name: 'Olive oil', store: "Trader Joe's", count: 8 },
-  { name: 'Salt & Pepper', store: "Trader Joe's", count: 5 },
-  { name: 'Branzino Fish', store: "Trader Joe's", count: 10 },
-  { name: 'Tikka Masala', store: "Trader Joe's", count: 12 },
-  { name: 'Red Shrimp', store: "Trader Joe's", count: 10 },
-  { name: 'Pulled Chicken Salsa Verde', store: "Trader Joe's", count: 12 },
-  { name: 'Bacon Cheddar Egg Bites', store: "Trader Joe's", count: 14 }
-];
-
-// --- APP STATE ---
-let activeList = [];
-let suggestionDB = {};
-
-// Store icon mapping - simplified
-const storeIcons = {
-  'TJ Maxx': { emoji: '🏬', color: '#991b1b' },
-  'Costco': { emoji: '🛒', color: '#003087' },
-  "Trader Joe's": { emoji: '🛒', color: '#c1272d' },
-  'Target': { emoji: '🎯', color: '#cc0000' },
-  'Whole Foods': { emoji: '🥬', color: '#00674f' },
-  'Safeway': { emoji: '🛒', color: '#e31837' },
-  'Amazon': { emoji: '📦', color: '#ff9900' },
-  'IKEA': { emoji: '🪑', color: '#0058a3' },
-  'General': { emoji: '🏠', color: '#f97316' }
-};
-
-function getStoreIcon(storeName) {
-  if (storeIcons[storeName]) return storeIcons[storeName];
-  return { emoji: '🛍️', color: '#6b7280' };
-}
-
-// --- PERSISTENCE ---
-function saveAppState() {
-  try {
-    localStorage.setItem('activeShoppingList', JSON.stringify(activeList));
-    localStorage.setItem('shoppingListSuggestionsDB', JSON.stringify(suggestionDB));
-    localStorage.setItem('storeIcons', JSON.stringify(storeIcons));
-  } catch (e) {
-    console.error("Local Storage Error:", e);
-    alert("Warning: Could not save list. Private browsing mode?");
-  }
-}
-
-function loadAppState() {
-  try {
-    const savedActive = localStorage.getItem('activeShoppingList');
-    if (savedActive) activeList = JSON.parse(savedActive);
-
-    const savedIcons = localStorage.getItem('storeIcons');
-    if (savedIcons) Object.assign(storeIcons, JSON.parse(savedIcons));
-
-    const savedDB = localStorage.getItem('shoppingListSuggestionsDB');
-    if (savedDB) {
-      suggestionDB = JSON.parse(savedDB);
-    } else {
-      seedDatabase();
+    @media (min-width: 600px) {
+      .suggestions-grid {
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      }
     }
-  } catch (e) {
-    console.error("Local Storage Error:", e);
-  }
-}
+  </style>
+  <script>
+    // --- INITIAL DATA SEEDING ---
+    // Consolidated stores: Home Depot, Hardware -> General
+    const INITIAL_SEED_DATA = [
+      // General / Home
+      { name: 'Plates', store: 'General', count: 5 },
+      { name: 'Spoons', store: 'General', count: 5 },
+      { name: 'Wine glass', store: 'General', count: 3 },
+      { name: 'Trash bags', store: 'General', count: 10 },
+      { name: 'Trash bin', store: 'General', count: 2 },
+      { name: 'Cups', store: 'General', count: 5 },
+      { name: 'Rain Jacket', store: 'General', count: 1 },
 
-function seedDatabase() {
-  const now = Date.now();
-  INITIAL_SEED_DATA.forEach(item => {
-    suggestionDB[item.name] = {
-      store: item.store,
-      count: item.count,
-      lastUsed: now
+      // Costco
+      { name: 'Toilet paper', store: 'Costco', count: 20 },
+      { name: 'Paper towels', store: 'Costco', count: 18 },
+      { name: 'Kitchen napkin', store: 'Costco', count: 12 },
+      { name: 'Coconut Water', store: 'Costco', count: 15 },
+      { name: 'Celsius', store: 'Costco', count: 12 },
+      { name: 'Kirkland Grilled Chicken Breast Skewers', store: 'Costco', count: 15 },
+      { name: 'Kirkland Wild Alaskan Sockeye Salmon', store: 'Costco', count: 12 },
+      { name: 'Kahiki Chicken Rice Bowls — Teriyaki', store: 'Costco', count: 8 },
+      { name: 'Kirkland Rotisserie Chicken', store: 'Costco', count: 25 },
+      { name: 'Bibigo Beef Pho Steamed Dumplings', store: 'Costco', count: 10 },
+      { name: 'Kirkland Boneless Chicken Breasts (frozen)', store: 'Costco', count: 10 },
+
+      // Trader Joe's
+      { name: 'Eggs', store: "Trader Joe's", count: 30 },
+      { name: 'Butter', store: "Trader Joe's", count: 15 },
+      { name: 'Olive oil', store: "Trader Joe's", count: 8 },
+      { name: 'Salt & Pepper', store: "Trader Joe's", count: 5 },
+      { name: 'Branzino Fish', store: "Trader Joe's", count: 10 },
+      { name: 'Tikka Masala', store: "Trader Joe's", count: 12 },
+      { name: 'Argentinian Red Shrimp — Ginger Garlic Butter', store: "Trader Joe's", count: 10 },
+      { name: 'Wild Raw Argentinian Red Shrimp (1 lb bag)', store: "Trader Joe's", count: 10 },
+      { name: 'Pulled Chicken Salsa Verde', store: "Trader Joe's", count: 12 },
+      { name: 'Pre-Cooked Grilled Chicken Strips', store: "Trader Joe's", count: 12 },
+      { name: 'Bacon Cheddar Egg Bites', store: "Trader Joe's", count: 14 }
+    ];
+
+    // --- APP STATE ---
+    let activeList = [];
+    let suggestionDB = {};
+
+    // Store icon mapping - simplified
+    const storeIcons = {
+      'TJ Maxx': { emoji: '🏬', color: '#991b1b' },
+      'Costco': { emoji: '🛒', color: '#003087' },
+      "Trader Joe's": { emoji: '🛒', color: '#c1272d' },
+      'Target': { emoji: '🎯', color: '#cc0000' },
+      'Whole Foods': { emoji: '🥬', color: '#00674f' },
+      'Safeway': { emoji: '🛒', color: '#e31837' },
+      'Amazon': { emoji: '📦', color: '#ff9900' },
+      'IKEA': { emoji: '🪑', color: '#0058a3' },
+      'General': { emoji: '🏠', color: '#f97316' }
     };
-  });
-  saveAppState();
-}
 
-// --- LOGIC ---
+    function getStoreIcon(storeName) {
+      if (storeIcons[storeName]) return storeIcons[storeName];
+      return { emoji: '🛍️', color: '#6b7280' };
+    }
 
-function addItem(itemName, storeName) {
-  if (!itemName.trim() || !storeName.trim()) return;
-  itemName = itemName.trim();
-  storeName = storeName.trim();
+    // --- PERSISTENCE ---
+    function saveAppState() {
+      try {
+        localStorage.setItem('activeShoppingList', JSON.stringify(activeList));
+        localStorage.setItem('shoppingListSuggestionsDB', JSON.stringify(suggestionDB));
+        localStorage.setItem('storeIcons', JSON.stringify(storeIcons));
+      } catch (e) {
+        console.error("Local Storage Error:", e);
+        alert("Warning: Could not save list. Private browsing mode?");
+      }
+    }
 
-  // Check for duplicate in active list to avoid double add
-  const exists = activeList.some(i => i.name.toLowerCase() === itemName.toLowerCase() && i.store === storeName);
-  if (exists) {
-    alert(`"${itemName}" is already in your list!`);
-    return;
-  }
+    function loadAppState() {
+      try {
+        const savedActive = localStorage.getItem('activeShoppingList');
+        if (savedActive) activeList = JSON.parse(savedActive);
 
-  activeList.push({ name: itemName, store: storeName, checked: false });
-  updateItemStats(itemName, storeName);
-  saveAppState();
-  renderAll();
-}
+        const savedIcons = localStorage.getItem('storeIcons');
+        if (savedIcons) Object.assign(storeIcons, JSON.parse(savedIcons));
 
-function updateItemStats(itemName, storeName) {
-  if (!suggestionDB[itemName]) {
-    suggestionDB[itemName] = {
-      store: storeName,
-      count: 1,
-      lastUsed: Date.now()
-    };
-  } else {
-    suggestionDB[itemName].count++;
-    suggestionDB[itemName].lastUsed = Date.now();
-    suggestionDB[itemName].store = storeName;
-  }
-}
+        const savedDB = localStorage.getItem('shoppingListSuggestionsDB');
+        if (savedDB) {
+          suggestionDB = JSON.parse(savedDB);
+        }
 
-function removeItem(index) {
-  activeList.splice(index, 1);
-  saveAppState();
-  renderActiveList();
-}
+        // Always merge new seed data (if missing) to ensure user sees new suggested items
+        const now = Date.now();
+        INITIAL_SEED_DATA.forEach(item => {
+          if (!suggestionDB[item.name]) {
+            suggestionDB[item.name] = {
+              store: item.store,
+              count: item.count,
+              lastUsed: now
+            };
+          }
+        });
 
-function toggleItem(index) {
-  activeList[index].checked = !activeList[index].checked;
-  saveAppState();
-}
+        // Cleanup legacy "Coco Water" if present
+        if (suggestionDB['Coco Water']) {
+          // Move stats to "Coconut Water" if they exist and we just added it, or merge
+          // For simplicity, just delete it as we have Coconut Water now.
+          delete suggestionDB['Coco Water'];
+        }
 
-// Fixed Logic for Clear Buttons
-function clearChecked() {
-  if (activeList.some(i => i.checked)) {
-      activeList = activeList.filter(item => !item.checked);
+        // MIGRATION: Fix legacy store names
+        Object.keys(suggestionDB).forEach(key => {
+          if (suggestionDB[key].store === 'Hardware Store' || suggestionDB[key].store === 'Home Depot') {
+            suggestionDB[key].store = 'General';
+          }
+        });
+
+        // Save the merged state
+        saveAppState();
+
+        } catch (e) {
+        console.error("Local Storage Error:", e);
+      }
+    }
+
+    function seedDatabase() {
+      const now = Date.now();
+      INITIAL_SEED_DATA.forEach(item => {
+        suggestionDB[item.name] = {
+          store: item.store,
+          count: item.count,
+          lastUsed: now
+        };
+      });
+      saveAppState();
+    }
+
+    // --- LOGIC ---
+
+    function addItem(itemName, storeName) {
+      if (!itemName.trim() || !storeName.trim()) return;
+      itemName = itemName.trim();
+      storeName = storeName.trim();
+
+      // Check for duplicate in active list to avoid double add
+      const exists = activeList.some(i => i.name.toLowerCase() === itemName.toLowerCase() && i.store === storeName);
+      if (exists) {
+        alert(`"${itemName}" is already in your list!`);
+        return;
+      }
+
+      activeList.push({ name: itemName, store: storeName, checked: false });
+      updateItemStats(itemName, storeName);
+      saveAppState();
+      renderAll();
+    }
+
+    function updateItemStats(itemName, storeName) {
+      if (!suggestionDB[itemName]) {
+        suggestionDB[itemName] = {
+          store: storeName,
+          count: 1,
+          lastUsed: Date.now()
+        };
+      } else {
+        suggestionDB[itemName].count++;
+        suggestionDB[itemName].lastUsed = Date.now();
+        suggestionDB[itemName].store = storeName;
+      }
+    }
+
+    function removeItem(index) {
+      activeList.splice(index, 1);
       saveAppState();
       renderActiveList();
-  }
-}
+    }
 
-function clearAll() {
-  // Use a simple confirm. If it fails on some devices, user can just delete items manually,
-  // but standard confirm is best practice.
-  if (window.confirm('Are you sure you want to delete ALL items from the list?')) {
-    activeList = [];
-    saveAppState();
-    renderActiveList();
-  }
-}
+    function toggleItem(index) {
+      activeList[index].checked = !activeList[index].checked;
+      saveAppState();
+    }
 
-// --- RENDERING ---
+    // Fixed Logic for Clear Buttons
+    function clearChecked() {
+      if (activeList.some(i => i.checked)) {
+        activeList = activeList.filter(item => !item.checked);
+        saveAppState();
+        renderActiveList();
+      }
+    }
 
-function renderAll() {
-  renderActiveList();
-  renderSuggestions();
-}
+    function clearAll() {
+      // Use a simple confirm. If it fails on some devices, user can just delete items manually,
+      // but standard confirm is best practice.
+      if (window.confirm('Are you sure you want to delete ALL items from the list?')) {
+        activeList = [];
+        saveAppState();
+        renderActiveList();
+      }
+    }
 
-function renderActiveList() {
-  const container = document.getElementById('activeListContainer');
-  
-  if (activeList.length === 0) {
-    container.innerHTML = '<div class="active-list-empty">Your list is empty. Add items above to get started.</div>';
-    return;
-  }
-  
-  // Group by store
-  const byStore = {};
-  activeList.forEach((item, idx) => {
-    if (!byStore[item.store]) byStore[item.store] = [];
-    byStore[item.store].push({ ...item, index: idx });
-  });
-  
-  let html = '<div class="active-list">';
-  Object.keys(byStore).sort().forEach(storeName => {
-    const icon = getStoreIcon(storeName);
-    html += `
+    // --- RENDERING ---
+
+    function renderAll() {
+      renderActiveList();
+      renderSuggestions();
+    }
+
+    function renderActiveList() {
+      const container = document.getElementById('activeListContainer');
+
+      if (activeList.length === 0) {
+        container.innerHTML = '<div class="active-list-empty">Your list is empty. Add items above to get started.</div>';
+        return;
+      }
+
+      // Group by store
+      const byStore = {};
+      activeList.forEach((item, idx) => {
+        if (!byStore[item.store]) byStore[item.store] = [];
+        byStore[item.store].push({ ...item, index: idx });
+      });
+
+      let html = '<div class="active-list">';
+      Object.keys(byStore).sort().forEach(storeName => {
+        const icon = getStoreIcon(storeName);
+        html += `
       <div class="store-group">
         <div class="store-group-header">
           <div class="store-group-icon" style="background: ${icon.color}">${icon.emoji}</div>
           <div class="store-group-name">${storeName}</div>
         </div>
+        <div class="active-items-grid">
     `;
-    
-    byStore[storeName].forEach(item => {
-      html += `
+
+        byStore[storeName].forEach(item => {
+          html += `
         <div class="item active-item">
           <label>
             <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleItem(${item.index})"/>
@@ -604,48 +717,48 @@ function renderActiveList() {
           <button class="delete-btn" onclick="removeItem(${item.index})">Delete</button>
         </div>
       `;
-    });
-    html += '</div>';
-  });
-  html += '</div>';
-  container.innerHTML = html;
-}
+        });
+        html += '</div></div>';
+      });
+      html += '</div>';
+      container.innerHTML = html;
+    }
 
-function renderSuggestions() {
-  const container = document.getElementById('suggestionsContainer');
-  const activeNames = new Set(activeList.map(i => i.name));
+    function renderSuggestions() {
+      const container = document.getElementById('suggestionsContainer');
+      const activeNames = new Set(activeList.map(i => i.name));
 
-  let candidates = Object.entries(suggestionDB).map(([name, data]) => ({
-    name: name,
-    ...data
-  }));
+      let candidates = Object.entries(suggestionDB).map(([name, data]) => ({
+        name: name,
+        ...data
+      }));
 
-  // Filter out active items
-  candidates = candidates.filter(item => !activeNames.has(item.name));
+      // Filter out active items
+      candidates = candidates.filter(item => !activeNames.has(item.name));
 
-  // SMART SORT: Frequency desc, then Recency desc
-  candidates.sort((a, b) => {
-    if (b.count !== a.count) return b.count - a.count;
-    return b.lastUsed - a.lastUsed;
-  });
+      // SMART SORT: Frequency desc, then Recency desc
+      candidates.sort((a, b) => {
+        if (b.count !== a.count) return b.count - a.count;
+        return b.lastUsed - a.lastUsed;
+      });
 
-  const topSuggestions = candidates.slice(0, 50);
+      const topSuggestions = candidates.slice(0, 50);
 
-  if (topSuggestions.length === 0) {
-    container.innerHTML = '<div style="text-align:center; color:#999; padding:20px;">No suggestions available. Add new items above and I\'ll remember them!</div>';
-    return;
-  }
+      if (topSuggestions.length === 0) {
+        container.innerHTML = '<div style="text-align:center; color:#999; padding:20px;">No suggestions available. Add new items above and I\'ll remember them!</div>';
+        return;
+      }
 
-  const byStore = {};
-  topSuggestions.forEach(item => {
-    if (!byStore[item.store]) byStore[item.store] = [];
-    byStore[item.store].push(item);
-  });
+      const byStore = {};
+      topSuggestions.forEach(item => {
+        if (!byStore[item.store]) byStore[item.store] = [];
+        byStore[item.store].push(item);
+      });
 
-  let html = '';
-  Object.keys(byStore).sort().forEach(storeName => {
-    const icon = getStoreIcon(storeName);
-    html += `
+      let html = '';
+      Object.keys(byStore).sort().forEach(storeName => {
+        const icon = getStoreIcon(storeName);
+        html += `
       <div class="store-section">
         <div class="store-header">
           <div class="store-icon" style="background: ${icon.color}">${icon.emoji}</div>
@@ -656,116 +769,122 @@ function renderSuggestions() {
         </div>
         <div class="suggestions-grid">
     `;
-    
-    byStore[storeName].forEach(item => {
-      const escapedName = item.name.replace(/'/g, "\\'");
-      const escapedStore = item.store.replace(/'/g, "\\'");
-      
-      html += `
+
+        byStore[storeName].forEach(item => {
+          const escapedName = item.name.replace(/'/g, "\\'");
+          const escapedStore = item.store.replace(/'/g, "\\'");
+
+          html += `
         <div class="item suggestion-item" onclick="addSuggestion('${escapedName}', '${escapedStore}')">
-          <span class="item-label" style="pointer-events: none;">➕ ${item.name}</span>
+          <span class="item-label" style="pointer-events: none;">${item.name}</span>
+          <div class="suggestion-icon">+</div>
         </div>
       `;
-    });
-    html += '</div></div>'; // Close grid and section
-  });
+        });
+        html += '</div></div>'; // Close grid and section
+      });
 
-  container.innerHTML = html;
-}
-
-function addSuggestion(name, store) {
-  addItem(name, store);
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-window.addEventListener('DOMContentLoaded', function() {
-  loadAppState();
-  renderAll();
-  
-  const addForm = document.getElementById('addItemForm');
-  const itemInput = document.getElementById('newItemInput');
-  const storeSelect = document.getElementById('storeSelect');
-  
-  addForm.addEventListener('submit', function(e) {
-    e.preventDefault();
-    addItem(itemInput.value, storeSelect.value);
-    itemInput.value = '';
-    itemInput.focus();
-  });
-  
-  storeSelect.addEventListener('change', function() {
-    if (this.value === 'custom') {
-      // Use simple default specific stores or 'General' as fallback if cancel
-      const customStore = prompt('Enter store name:');
-      if (customStore && customStore.trim()) {
-        const option = document.createElement('option');
-        option.value = customStore.trim();
-        option.textContent = customStore.trim();
-        option.selected = true;
-        this.insertBefore(option, this.querySelector('option[value="custom"]'));
-        
-        if (!storeIcons[customStore.trim()]) {
-          storeIcons[customStore.trim()] = { emoji: '🛍️', color: '#6b7280' };
-        }
-      } else {
-        this.value = '';
-      }
+      container.innerHTML = html;
     }
-  });
 
-  // Touch support is redundant with onclick usually, but kept for legacy webviews
-  // Removing touch event listener to avoid double-firing as onclick works fine on mobile modern browsers
-});
-</script>
+    function addSuggestion(name, store) {
+      addItem(name, store);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    window.addEventListener('DOMContentLoaded', function () {
+      loadAppState();
+      renderAll();
+
+      const addForm = document.getElementById('addItemForm');
+      const itemInput = document.getElementById('newItemInput');
+      const storeSelect = document.getElementById('storeSelect');
+
+      addForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        addItem(itemInput.value, storeSelect.value);
+        itemInput.value = '';
+        itemInput.focus();
+      });
+
+      storeSelect.addEventListener('change', function () {
+        if (this.value === 'custom') {
+          // Use simple default specific stores or 'General' as fallback if cancel
+          const customStore = prompt('Enter store name:');
+          if (customStore && customStore.trim()) {
+            const option = document.createElement('option');
+            option.value = customStore.trim();
+            option.textContent = customStore.trim();
+            option.selected = true;
+            this.insertBefore(option, this.querySelector('option[value="custom"]'));
+
+            if (!storeIcons[customStore.trim()]) {
+              storeIcons[customStore.trim()] = { emoji: '🛍️', color: '#6b7280' };
+            }
+          } else {
+            this.value = '';
+          }
+        }
+      });
+
+      // Touch support is redundant with onclick usually, but kept for legacy webviews
+      // Removing touch event listener to avoid double-firing as onclick works fine on mobile modern browsers
+    });
+  </script>
 </head>
+
 <body>
 
-<div class="header">
-  <h1>Shopping <span class="highlight">List</span></h1>
-  <p>Your smart, learning shopping companion.</p>
-</div>
+  <div class="header">
+    <h1>Shopping <span class="highlight">List</span></h1>
+    <p>Your smart, learning shopping companion.</p>
+  </div>
 
-<!-- ADD ITEM SECTION -->
-<div class="add-item-section">
-  <h3>➕ Add Item</h3>
-  <form id="addItemForm" class="add-item-form">
-    <div class="add-item-row">
-      <input type="text" id="newItemInput" placeholder="e.g. Milk, Batteries..." required/>
-      <select id="storeSelect" required>
-        <option value="">Store...</option>
-        <option value="General">General</option>
-        <option value="TJ Maxx">TJ Maxx</option>
-        <option value="Costco">Costco</option>
-        <option value="Trader Joe's">Trader Joe's</option>
-        <option value="Target">Target</option>
-        <option value="Amazon">Amazon</option>
-        <option value="custom">+ New Store...</option>
-      </select>
-    </div>
-    <button type="submit">Add to List</button>
-  </form>
-</div>
+  <!-- ADD ITEM SECTION -->
+  <div class="add-item-section">
+    <h3>➕ Add Item</h3>
+    <form id="addItemForm" class="add-item-form">
+      <div class="add-item-row">
+        <input type="text" id="newItemInput" placeholder="e.g. Milk, Batteries..." required />
+        <select id="storeSelect" required>
+          <option value="">Store...</option>
+          <option value="Trader Joe's">Trader Joe's</option>
+          <option value="Costco">Costco</option>
+          <option value="Amazon">Amazon</option>
+          <option value="Target">Target</option>
+          <option value="TJ Maxx">TJ Maxx</option>
+          <option value="General">General</option>
+          <option value="custom">+ New Store...</option>
+        </select>
+      </div>
+      <button type="submit">Add to List</button>
+    </form>
+  </div>
 
-<!-- ACTIVE LIST -->
-<div id="activeListContainer">
-  <!-- Filled by Javascript -->
-</div>
+  <!-- ACTIVE LIST -->
+  <div id="activeListContainer">
+    <!-- Filled by Javascript -->
+  </div>
 
-<!-- ACTION BUTTONS -->
-<div class="action-buttons">
-  <button onclick="clearChecked()">Clear Checked</button>
-  <button class="danger" onclick="clearAll()">Reset List</button>
-</div>
+  <!-- ACTION BUTTONS -->
+  <div class="action-buttons">
+    <button onclick="clearChecked()">Clear Checked</button>
+    <button class="danger" onclick="clearAll()">Reset List</button>
+  </div>
 
-<!-- DIVIDER -->
-<div class="divider">
-  <span>Suggested For You</span>
-</div>
+  <!-- DIVIDER -->
+  <div class="divider">
+    <span>Suggested For You</span>
+  </div>
 
-<!-- SUGGESTIONS CONTAINER -->
-<div id="suggestionsContainer">
-  <!-- Filled by Javascript -->
-</div>
+  <!-- SUGGESTIONS CONTAINER -->
+  <div id="suggestionsContainer">
+    <!-- Filled by Javascript -->
+  </div>
 
+  <div style="text-align: center; margin-top: 30px; color: #9ca3af; font-size: 0.8rem; padding-bottom: 20px;">
+    Shopping List App v1.1
+  </div>
 </body>
+
 </html>
