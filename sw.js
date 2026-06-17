@@ -9,7 +9,11 @@ const ASSETS = [
 ];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(ASSETS)));
+  e.waitUntil(
+    caches.open(CACHE_NAME).then(c =>
+      c.addAll(ASSETS.map(url => new Request(url, { cache: 'no-cache' })))
+    )
+  );
   self.skipWaiting();
 });
 
