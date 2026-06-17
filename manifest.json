@@ -1,0 +1,18 @@
+{
+  "name": "Shopping List",
+  "short_name": "ShopList",
+  "description": "Your smart, learning shopping companion",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8f9fb",
+  "theme_color": "#e67e22",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
