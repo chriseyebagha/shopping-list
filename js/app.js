@@ -96,6 +96,7 @@ const SEED_DATA = [
 const getStoreRank = s => { const i = STORE_ORDER.indexOf(s); return i === -1 ? 999 : i; };
 const getStoreIcon = s => STORE_ICONS[s] || { emoji: '🛍️', color: '#6b7280' };
 const esc = s => s.replace(/['"<>&]/g, c => ({ "'": '&#39;', '"': '&quot;', '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]));
+const jsesc = s => s.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 
 function haptic(style) {
   if (!navigator.vibrate) return;
@@ -342,7 +343,7 @@ function openStorePicker() {
     const icon = getStoreIcon(name);
     const sel = selectedStore === name ? 'selected' : '';
     html += `
-      <div class="store-grid-item ${sel}" onclick="window._pickStore('${esc(name).replace(/'/g, "\\'")}')">
+      <div class="store-grid-item ${sel}" onclick="window._pickStore('${jsesc(name)}')">
         <div class="sg-icon" style="background:${icon.color}">${icon.emoji}</div>
         <div class="sg-name">${esc(name)}</div>
       </div>`;
@@ -759,7 +760,7 @@ function renderSuggestions() {
 
     byStore[store].forEach(item => {
       html += `
-        <div class="suggestion-item" onclick="window._addSuggestion('${esc(item.name).replace(/'/g, "\\'")}', '${esc(item.store).replace(/'/g, "\\'")}')">
+        <div class="suggestion-item" onclick="window._addSuggestion('${jsesc(item.name)}', '${jsesc(item.store)}')">
           <span class="item-text">${esc(item.name)}</span>
           <div class="suggestion-icon">+</div>
         </div>`;
