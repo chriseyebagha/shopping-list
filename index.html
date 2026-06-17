@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
   <title>Shopping List</title>
-  <meta name="description" content="Your smart, learning shopping companion" />
+  <meta name="description" content="Your smart shopping companion" />
   <meta name="theme-color" content="#e67e22" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -43,7 +43,7 @@
     </div>
   </div>
 
-  <!-- Top bar (sticky) -->
+  <!-- Top bar -->
   <div id="topBar" class="top-bar hidden">
     <div id="userDisplay" class="user-info"></div>
     <div class="top-bar-actions">
@@ -72,31 +72,24 @@
       <button class="install-dismiss" onclick="event.stopPropagation(); dismissInstall()">✕</button>
     </div>
 
-    <!-- Header -->
-    <div class="header">
-      <h1>Shopping <span class="highlight">List</span></h1>
-      <p>Your smart, learning shopping companion</p>
-    </div>
-
     <!-- List tabs -->
     <div id="listTabs" class="list-mode-bar"></div>
 
     <!-- Sticky add section -->
     <div class="add-section">
-      <h3>Add Item</h3>
       <form id="addForm" class="add-form">
         <div class="add-row">
-          <input type="text" id="itemInput" name="item" placeholder="e.g. Milk, Batteries..." required autocomplete="off" />
-          <button type="button" id="storePickerBtn" class="store-picker-btn" onclick="openStorePicker()">
-            Store... <span class="chevron">▼</span>
-          </button>
+          <input type="text" id="itemInput" name="item" placeholder="Add an item..." required autocomplete="off" />
+          <input type="number" id="qtyInput" name="qty" value="1" min="1" max="99" />
         </div>
         <div class="add-row-bottom">
-          <input type="number" id="qtyInput" name="qty" value="1" min="1" max="99" />
-          <button type="button" id="voiceBtn" class="voice-btn" onclick="startVoice()">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+          <button type="button" id="catPickerBtn" class="cat-picker-btn" onclick="openCategoryPicker()">
+            Category <span class="chevron">▼</span>
           </button>
-          <button type="submit" class="submit-btn">Add to List</button>
+          <button type="button" id="voiceBtn" class="voice-btn" onclick="startVoice()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+          </button>
+          <button type="submit" class="submit-btn">Add</button>
         </div>
       </form>
     </div>
@@ -110,37 +103,34 @@
       <button class="danger" onclick="clearAll()">Reset List</button>
     </div>
 
-    <!-- Divider + collapsible suggestions -->
-    <div class="divider"><span>Suggestions</span></div>
-
+    <!-- Suggestions -->
     <div class="suggestions-header">
       <button id="suggestionsToggle" class="suggestions-toggle" onclick="toggleSuggestions()">
-        <svg class="toggle-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-        Suggested Items
+        <svg class="toggle-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        Suggestions
       </button>
       <span id="suggestionsCountBadge" class="suggestions-count">0</span>
     </div>
 
     <div id="suggestionsContent">
-      <!-- Search -->
       <div class="search-bar">
         <span class="search-icon">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         </span>
-        <input type="text" id="searchInput" placeholder="Search suggestions..." />
+        <input type="text" id="searchInput" placeholder="Search..." />
       </div>
       <div id="suggestionsInner"></div>
     </div>
 
-    <div class="footer">Shopping List v2.1</div>
+    <div class="footer">Shopping List v3.0</div>
   </div>
 
-  <!-- Store picker bottom sheet -->
-  <div id="storeSheet" class="bottom-sheet-overlay" onclick="if(event.target===this)closeStorePicker()">
+  <!-- Category picker bottom sheet -->
+  <div id="categorySheet" class="bottom-sheet-overlay" onclick="if(event.target===this)closeCategoryPicker()">
     <div class="bottom-sheet">
       <div class="bottom-sheet-handle"></div>
-      <h3>Pick a Store</h3>
-      <div id="storeGridContainer"></div>
+      <h3>Pick a Category</h3>
+      <div id="catGridContainer"></div>
     </div>
   </div>
 

@@ -2,7 +2,6 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebas
 import { getDatabase, ref, set, push, onValue, remove, update, off, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 import { getAuth, setPersistence, browserLocalPersistence, indexedDBLocalPersistence, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, RecaptchaVerifier, signInWithPhoneNumber } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-// ── Firebase ──
 const firebaseConfig = {
   apiKey: "AIzaSyBAnMbbd7hbQvx8mdNF5PajAdxl_VYOsxE",
   authDomain: "chris-shopping-list.firebaseapp.com",
@@ -22,79 +21,120 @@ setPersistence(auth, indexedDBLocalPersistence).catch(() =>
 );
 const provider = new GoogleAuthProvider();
 
+// ── Categories ──
+const CATEGORIES = {
+  'Produce':             { emoji: '🥬', color: '#16a34a' },
+  'Meat & Poultry':      { emoji: '🥩', color: '#dc2626' },
+  'Fish & Seafood':      { emoji: '🐟', color: '#0284c7' },
+  'Dairy & Eggs':        { emoji: '🧀', color: '#eab308' },
+  'Bread & Bakery':      { emoji: '🍞', color: '#d97706' },
+  'Deli':                { emoji: '🥪', color: '#9333ea' },
+  'Pasta & Grains':      { emoji: '🍝', color: '#b45309' },
+  'Canned & Jarred':     { emoji: '🥫', color: '#b91c1c' },
+  'Condiments & Spices': { emoji: '🧂', color: '#78716c' },
+  'Snacks':              { emoji: '🍿', color: '#f59e0b' },
+  'Beverages':           { emoji: '🥤', color: '#0891b2' },
+  'Frozen Foods':        { emoji: '❄️', color: '#6366f1' },
+  'Breakfast & Cereal':  { emoji: '🥣', color: '#ea580c' },
+  'Baking':              { emoji: '🧁', color: '#db2777' },
+  'Household':           { emoji: '🧹', color: '#0d9488' },
+  'Personal Care':       { emoji: '🧴', color: '#7c3aed' },
+  'Wine & Spirits':      { emoji: '🍷', color: '#7f1d1d' },
+  'Other':               { emoji: '🛒', color: '#6b7280' }
+};
+
+const CATEGORY_ORDER = Object.keys(CATEGORIES);
+
+const KEYWORD_MAP = {
+  'Produce': ['apple','banana','orange','grape','strawberry','blueberry','raspberry','mango','pineapple','watermelon','peach','pear','plum','cherry','lemon','lime','avocado','tomato','potato','onion','garlic','ginger','lettuce','spinach','kale','arugula','broccoli','cauliflower','carrot','celery','cucumber','zucchini','squash','bell pepper','jalapeño','mushroom','corn','asparagus','green bean','pea','sweet potato','cabbage','radish','beet','eggplant','artichoke','brussels sprout','cilantro','parsley','basil','mint','rosemary','thyme','dill','chive','scallion','leek','shallot','fruit','vegetable','salad','herb','berries','melon'],
+  'Meat & Poultry': ['chicken','beef','pork','turkey','lamb','steak','ground beef','ground turkey','bacon','sausage','ham','veal','bison','duck','ribs','roast','tenderloin','thigh','drumstick','wing','breast','rotisserie','meatball','hot dog','jerky','chorizo','prosciutto','salami','pepperoni'],
+  'Fish & Seafood': ['fish','salmon','tuna','shrimp','crab','lobster','scallop','clam','mussel','oyster','sardine','anchovy','cod','halibut','tilapia','trout','swordfish','mahi','catfish','branzino','calamari','squid','octopus','seafood','prawn'],
+  'Dairy & Eggs': ['milk','cheese','yogurt','butter','cream','egg','sour cream','cottage cheese','cream cheese','mozzarella','cheddar','parmesan','ricotta','brie','gouda','swiss','feta','goat cheese','half and half','whipping cream','heavy cream','almond milk','oat milk','soy milk','buttermilk','ghee','kefir'],
+  'Bread & Bakery': ['bread','bagel','tortilla','pita','naan','croissant','muffin','roll','bun','baguette','sourdough','ciabatta','focaccia','english muffin','wrap','flatbread','cornbread','brioche','pretzel','crouton'],
+  'Deli': ['deli','cold cut','roast beef','turkey breast','sandwich','sub','wrap','coleslaw','potato salad','macaroni salad','hummus','olive'],
+  'Pasta & Grains': ['pasta','spaghetti','penne','fettuccine','linguine','macaroni','rice','quinoa','couscous','barley','oat','farro','noodle','ramen','udon','orzo','gnocchi','tortellini','ravioli','lasagna','flour','cornmeal','polenta','grain','lentil','chickpea','bean','black bean','kidney bean','pinto bean'],
+  'Canned & Jarred': ['canned','jarred','can of','tomato sauce','tomato paste','diced tomato','crushed tomato','soup','broth','stock','coconut milk canned','tuna can','sardine can','pickle','jam','jelly','preserves','peanut butter','almond butter','nutella','salsa','applesauce'],
+  'Condiments & Spices': ['salt','pepper','olive oil','vegetable oil','coconut oil','sesame oil','vinegar','soy sauce','ketchup','mustard','mayo','mayonnaise','hot sauce','sriracha','worcestershire','bbq sauce','teriyaki','ranch','dressing','cumin','paprika','cinnamon','oregano','turmeric','chili powder','garlic powder','onion powder','cayenne','nutmeg','vanilla','extract','seasoning','spice','marinade','relish','honey','maple syrup','agave'],
+  'Snacks': ['chip','cracker','popcorn','pretzel','nut','almond','cashew','walnut','pecan','pistachio','trail mix','granola bar','protein bar','candy','chocolate','gummy','cookie','snack','rice cake','fruit snack','dried fruit'],
+  'Beverages': ['water','juice','soda','pop','coffee','tea','kombucha','sparkling','seltzer','coconut water','sports drink','energy drink','gatorade','celsius','lemonade','iced tea','cold brew','creamer'],
+  'Frozen Foods': ['frozen','ice cream','popsicle','pizza frozen','waffle frozen','dumpling','tikka masala','burrito frozen','pot pie','tv dinner','gelato','sorbet','frozen fruit','frozen vegetable','frozen meal','egg bites'],
+  'Breakfast & Cereal': ['cereal','oatmeal','granola','pancake','waffle','syrup','breakfast'],
+  'Baking': ['baking soda','baking powder','yeast','sugar','brown sugar','powdered sugar','flour','cocoa','chocolate chip','sprinkle','frosting','cake mix','pie crust'],
+  'Household': ['paper towel','toilet paper','napkin','trash bag','dish soap','laundry detergent','fabric softener','bleach','disinfectant','sponge','scrub','cleaner','wipe','foil','plastic wrap','parchment','zip lock','storage bag','light bulb','battery','candle','match','broom','dustpan','mop','vacuum','air freshener','trash bin','plate','spoon','fork','knife','cup','glass','bowl','pot','pan','tupperware','container','oven mitt','towel','bath mat','laundry hamper','hanger','iron','can opener','wine opener','wine glass','dining chair'],
+  'Personal Care': ['shampoo','conditioner','body wash','soap bar','lotion','moisturizer','sunscreen','deodorant','toothpaste','toothbrush','floss','mouthwash','razor','shaving cream','cotton','q-tip','bandage','medicine','vitamin','supplement','tissue','face wash','hand sanitizer','bathing sponge'],
+  'Wine & Spirits': ['wine','beer','vodka','whiskey','rum','tequila','gin','bourbon','champagne','prosecco','hard seltzer','cocktail','mixer','bourbon','scotch','brandy','cognac','sake','cider','mezcal','liqueur','liquor'],
+};
+
+function autoCategory(name) {
+  const lower = name.toLowerCase();
+  for (const [cat, keywords] of Object.entries(KEYWORD_MAP)) {
+    for (const kw of keywords) {
+      if (lower.includes(kw)) return cat;
+    }
+  }
+  return 'Other';
+}
+
+function itemCategory(item) {
+  if (item.category && CATEGORIES[item.category]) return item.category;
+  return autoCategory(item.name);
+}
+
 // ── State ──
-let listRef, suggestionsRef, iconsRef;
+let listRef, suggestionsRef;
 let currentUser = null;
 let activeList = [];
 let suggestionDB = {};
 let activeListId = 'personal';
 let sharedLists = {};
 let searchQuery = '';
-let selectedStore = '';
+let selectedCategory = '';
 let suggestionsCollapsed = false;
 
-const STORE_ORDER = ["Trader Joe's", "Whole Foods", "Costco", "Safeway", "Target", "TJ Maxx", "Amazon", "IKEA", "General"];
-
-const STORE_ICONS = {
-  "Trader Joe's": { emoji: '🛒', color: '#c1272d' },
-  'Whole Foods': { emoji: '🥬', color: '#00674f' },
-  'Costco': { emoji: '🏪', color: '#003087' },
-  'Safeway': { emoji: '🛒', color: '#e31837' },
-  'Target': { emoji: '🎯', color: '#cc0000' },
-  'TJ Maxx': { emoji: '🏬', color: '#991b1b' },
-  'Amazon': { emoji: '📦', color: '#ff9900' },
-  'IKEA': { emoji: '🪑', color: '#0058a3' },
-  'General': { emoji: '🏠', color: '#f97316' }
-};
-
 const SEED_DATA = [
-  { name: 'Plates', store: 'General', count: 5 },
-  { name: 'Spoons', store: 'General', count: 5 },
-  { name: 'Wine glass', store: 'General', count: 5 },
-  { name: 'Cups', store: 'General', count: 5 },
-  { name: 'Trash bags', store: 'General', count: 10 },
-  { name: 'Trash bin', store: 'General', count: 1 },
-  { name: 'Rain Jacket', store: 'General', count: 1 },
-  { name: 'Dining Chair', store: 'TJ Maxx', count: 2 },
-  { name: 'Knife', store: 'TJ Maxx', count: 1 },
-  { name: 'Can Opener', store: 'TJ Maxx', count: 1 },
-  { name: 'Wine Opener', store: 'TJ Maxx', count: 1 },
-  { name: 'Oven Mitts', store: 'TJ Maxx', count: 1 },
-  { name: 'Tupperware', store: 'TJ Maxx', count: 5 },
-  { name: 'Bath Mat', store: 'TJ Maxx', count: 1 },
-  { name: 'Hand Towels', store: 'TJ Maxx', count: 5 },
-  { name: 'Bathing Sponge', store: 'TJ Maxx', count: 2 },
-  { name: 'Broom and Dustpan', store: 'TJ Maxx', count: 1 },
-  { name: 'Laundry Hamper', store: 'TJ Maxx', count: 1 },
-  { name: 'Laundry Detergent', store: 'Costco', count: 5 },
-  { name: 'Toilet Paper', store: 'Costco', count: 20 },
-  { name: 'Paper Towels', store: 'Costco', count: 20 },
-  { name: 'Kitchen Napkin', store: 'Costco', count: 10 },
-  { name: 'Coconut Water', store: 'Costco', count: 15 },
-  { name: 'Celsius', store: 'Costco', count: 15 },
-  { name: 'Kirkland Grilled Chicken Breast Skewers', store: 'Costco', count: 10 },
-  { name: 'Kirkland Wild Alaskan Sockeye Salmon', store: 'Costco', count: 10 },
-  { name: 'Kahiki Chicken Rice Bowls — Teriyaki', store: 'Costco', count: 8 },
-  { name: 'Kirkland Rotisserie Chicken', store: 'Costco', count: 25 },
-  { name: 'Bibigo Beef Pho Steamed Dumplings', store: 'Costco', count: 10 },
-  { name: 'Kirkland Boneless Chicken Breasts (frozen)', store: 'Costco', count: 10 },
-  { name: 'Eggs', store: "Trader Joe's", count: 30 },
-  { name: 'Butter', store: "Trader Joe's", count: 20 },
-  { name: 'Olive oil', store: "Trader Joe's", count: 15 },
-  { name: 'Salt', store: "Trader Joe's", count: 10 },
-  { name: 'Pepper', store: "Trader Joe's", count: 10 },
-  { name: 'Branzino Fish', store: "Trader Joe's", count: 12 },
-  { name: 'Tikka Masala', store: "Trader Joe's", count: 15 },
-  { name: 'Argentinian Red Shrimp — Ginger Garlic Butter', store: "Trader Joe's", count: 12 },
-  { name: 'Wild Raw Argentinian Red Shrimp (1 lb bag)', store: "Trader Joe's", count: 12 },
-  { name: 'Pulled Chicken Salsa Verde', store: "Trader Joe's", count: 15 },
-  { name: 'Pre-Cooked Grilled Chicken Strips', store: "Trader Joe's", count: 15 },
-  { name: 'Bacon Cheddar Egg Bites', store: "Trader Joe's", count: 15 }
+  { name: 'Eggs', category: 'Dairy & Eggs', count: 30 },
+  { name: 'Butter', category: 'Dairy & Eggs', count: 20 },
+  { name: 'Olive oil', category: 'Condiments & Spices', count: 15 },
+  { name: 'Salt', category: 'Condiments & Spices', count: 10 },
+  { name: 'Pepper', category: 'Condiments & Spices', count: 10 },
+  { name: 'Branzino Fish', category: 'Fish & Seafood', count: 12 },
+  { name: 'Tikka Masala', category: 'Frozen Foods', count: 15 },
+  { name: 'Argentinian Red Shrimp — Ginger Garlic Butter', category: 'Fish & Seafood', count: 12 },
+  { name: 'Wild Raw Argentinian Red Shrimp (1 lb bag)', category: 'Fish & Seafood', count: 12 },
+  { name: 'Pulled Chicken Salsa Verde', category: 'Frozen Foods', count: 15 },
+  { name: 'Pre-Cooked Grilled Chicken Strips', category: 'Meat & Poultry', count: 15 },
+  { name: 'Bacon Cheddar Egg Bites', category: 'Breakfast & Cereal', count: 15 },
+  { name: 'Kirkland Rotisserie Chicken', category: 'Meat & Poultry', count: 25 },
+  { name: 'Kirkland Grilled Chicken Breast Skewers', category: 'Meat & Poultry', count: 10 },
+  { name: 'Kirkland Wild Alaskan Sockeye Salmon', category: 'Fish & Seafood', count: 10 },
+  { name: 'Kahiki Chicken Rice Bowls — Teriyaki', category: 'Frozen Foods', count: 8 },
+  { name: 'Bibigo Beef Pho Steamed Dumplings', category: 'Frozen Foods', count: 10 },
+  { name: 'Kirkland Boneless Chicken Breasts (frozen)', category: 'Frozen Foods', count: 10 },
+  { name: 'Coconut Water', category: 'Beverages', count: 15 },
+  { name: 'Celsius', category: 'Beverages', count: 15 },
+  { name: 'Laundry Detergent', category: 'Household', count: 5 },
+  { name: 'Toilet Paper', category: 'Household', count: 20 },
+  { name: 'Paper Towels', category: 'Household', count: 20 },
+  { name: 'Kitchen Napkins', category: 'Household', count: 10 },
+  { name: 'Trash Bags', category: 'Household', count: 10 },
+  { name: 'Plates', category: 'Household', count: 5 },
+  { name: 'Cups', category: 'Household', count: 5 },
+  { name: 'Spoons', category: 'Household', count: 5 },
+  { name: 'Wine Glass', category: 'Household', count: 5 },
+  { name: 'Hand Towels', category: 'Household', count: 5 },
+  { name: 'Bathing Sponge', category: 'Personal Care', count: 2 },
+  { name: 'Broom and Dustpan', category: 'Household', count: 1 },
+  { name: 'Tupperware', category: 'Household', count: 5 },
+  { name: 'Oven Mitts', category: 'Household', count: 1 },
+  { name: 'Can Opener', category: 'Household', count: 1 },
+  { name: 'Wine Opener', category: 'Household', count: 1 },
+  { name: 'Bath Mat', category: 'Household', count: 1 },
+  { name: 'Laundry Hamper', category: 'Household', count: 1 },
+  { name: 'Trash Bin', category: 'Household', count: 1 },
+  { name: 'Rain Jacket', category: 'Other', count: 1 },
+  { name: 'Dining Chair', category: 'Other', count: 2 },
 ];
 
-// ── Helpers ──
-const getStoreRank = s => { const i = STORE_ORDER.indexOf(s); return i === -1 ? 999 : i; };
-const getStoreIcon = s => STORE_ICONS[s] || { emoji: '🛍️', color: '#6b7280' };
 const esc = s => s.replace(/['"<>&]/g, c => ({ "'": '&#39;', '"': '&quot;', '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]));
 const jsesc = s => s.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 
@@ -200,7 +240,6 @@ onAuthStateChanged(auth, user => {
 
     listRef = ref(db, `users/${user.uid}/shoppingList`);
     suggestionsRef = ref(db, `users/${user.uid}/suggestions`);
-    iconsRef = ref(db, `users/${user.uid}/storeIcons`);
 
     setupListeners();
     loadSharedLists();
@@ -226,58 +265,37 @@ function setupListeners() {
     else seedDatabase();
     renderSuggestions();
   });
-
-  onValue(iconsRef, snap => {
-    const data = snap.val();
-    if (data) Object.assign(STORE_ICONS, data);
-    renderActiveList();
-    renderSuggestions();
-  });
 }
 
 function seedDatabase() {
-  const savedDB = localStorage.getItem('shoppingListSuggestionsDB');
-  if (savedDB) {
-    try { update(suggestionsRef, JSON.parse(savedDB)); } catch (e) {}
-  } else {
-    const updates = {};
-    SEED_DATA.forEach(item => {
-      updates[item.name] = { store: item.store, count: item.count, lastUsed: Date.now() };
-    });
-    update(suggestionsRef, updates);
-  }
-  const savedActive = localStorage.getItem('activeShoppingList');
-  if (savedActive) {
-    try {
-      JSON.parse(savedActive).forEach(item => {
-        push(listRef, { name: item.name, store: item.store, qty: item.qty || 1, checked: item.checked || false });
-      });
-      localStorage.removeItem('activeShoppingList');
-    } catch (e) {}
-  }
+  const updates = {};
+  SEED_DATA.forEach(item => {
+    updates[item.name] = { category: item.category, count: item.count, lastUsed: Date.now() };
+  });
+  update(suggestionsRef, updates);
 }
 
 // ── CRUD ──
-function addItem(name, store, qty) {
-  if (!currentUser || !name.trim() || !store.trim()) return;
+function addItem(name, category, qty) {
+  if (!currentUser || !name.trim()) return;
   name = name.trim();
-  store = store.trim();
+  category = category || autoCategory(name);
   qty = Math.max(1, parseInt(qty) || 1);
 
-  const exists = activeList.some(i => i.name.toLowerCase() === name.toLowerCase() && i.store === store);
+  const exists = activeList.some(i => i.name.toLowerCase() === name.toLowerCase());
   if (exists) { toast(`"${name}" already on list`); haptic('heavy'); return; }
 
   const targetRef = activeListId === 'personal' ? listRef : ref(db, `sharedLists/${activeListId}/items`);
-  push(targetRef, { name, store, qty, checked: false });
-  updateStats(name, store);
+  push(targetRef, { name, category, qty, checked: false });
+  updateStats(name, category);
   haptic('success');
   toast(`Added ${name}`);
 }
 
-function updateStats(name, store) {
+function updateStats(name, category) {
   const current = suggestionDB[name];
   const updates = {};
-  updates[name] = { store, count: current ? current.count + 1 : 1, lastUsed: Date.now() };
+  updates[name] = { category, count: current ? current.count + 1 : 1, lastUsed: Date.now() };
   update(suggestionsRef, updates);
 }
 
@@ -334,65 +352,60 @@ function clearAll() {
   toast("List cleared");
 }
 
-// ── Store picker bottom sheet ──
-function openStorePicker() {
-  const overlay = document.getElementById('storeSheet');
-  let html = '<div class="store-grid">';
+// ── Category picker bottom sheet ──
+function openCategoryPicker() {
+  const overlay = document.getElementById('categorySheet');
+  let html = '<div class="cat-grid">';
 
-  STORE_ORDER.forEach(name => {
-    const icon = getStoreIcon(name);
-    const sel = selectedStore === name ? 'selected' : '';
+  CATEGORY_ORDER.forEach(name => {
+    const cat = CATEGORIES[name];
+    const sel = selectedCategory === name ? 'selected' : '';
     html += `
-      <div class="store-grid-item ${sel}" onclick="window._pickStore('${jsesc(name)}')">
-        <div class="sg-icon" style="background:${icon.color}">${icon.emoji}</div>
-        <div class="sg-name">${esc(name)}</div>
+      <div class="cat-grid-item ${sel}" onclick="window._pickCategory('${jsesc(name)}')">
+        <span class="cat-emoji">${cat.emoji}</span>
+        <span class="cat-name">${esc(name)}</span>
       </div>`;
   });
 
-  html += `
-    <div class="store-grid-item custom-store" onclick="window._pickCustomStore()">
-      <div class="sg-icon" style="background:var(--text-muted)">＋</div>
-      <div class="sg-name">New Store</div>
-    </div>`;
   html += '</div>';
-
-  document.getElementById('storeGridContainer').innerHTML = html;
+  document.getElementById('catGridContainer').innerHTML = html;
   overlay.classList.add('open');
   haptic('light');
 }
 
-function closeStorePicker() {
-  document.getElementById('storeSheet').classList.remove('open');
+function closeCategoryPicker() {
+  document.getElementById('categorySheet').classList.remove('open');
 }
 
-function pickStore(name) {
-  selectedStore = name;
-  updateStoreButton();
-  closeStorePicker();
+function pickCategory(name) {
+  selectedCategory = name;
+  updateCategoryButton();
+  closeCategoryPicker();
   haptic('light');
 }
 
-function pickCustomStore() {
-  const name = prompt('Enter store name:');
-  if (name && name.trim()) {
-    const trimmed = name.trim();
-    if (!STORE_ICONS[trimmed] && currentUser) {
-      update(iconsRef, { [trimmed]: { emoji: '🛍️', color: '#6b7280' } });
-    }
-    selectedStore = trimmed;
-    updateStoreButton();
-    closeStorePicker();
+function updateCategoryButton() {
+  const btn = document.getElementById('catPickerBtn');
+  if (!btn) return;
+  if (selectedCategory && CATEGORIES[selectedCategory]) {
+    const cat = CATEGORIES[selectedCategory];
+    btn.innerHTML = `<span class="cat-btn-emoji">${cat.emoji}</span> ${esc(selectedCategory)} <span class="chevron">▼</span>`;
+    btn.classList.add('has-value');
+  } else {
+    btn.innerHTML = `Category <span class="chevron">▼</span>`;
+    btn.classList.remove('has-value');
   }
 }
 
-function updateStoreButton() {
-  const btn = document.getElementById('storePickerBtn');
-  if (!btn) return;
-  if (selectedStore) {
-    const icon = getStoreIcon(selectedStore);
-    btn.innerHTML = `<span class="store-emoji">${icon.emoji}</span> ${esc(selectedStore)} <span class="chevron">▼</span>`;
-  } else {
-    btn.innerHTML = `Store... <span class="chevron">▼</span>`;
+function autoFillCategory() {
+  const input = document.getElementById('itemInput');
+  if (!input) return;
+  const name = input.value.trim();
+  if (name.length < 2) return;
+  const cat = autoCategory(name);
+  if (cat !== 'Other' && !selectedCategory) {
+    selectedCategory = cat;
+    updateCategoryButton();
   }
 }
 
@@ -550,6 +563,7 @@ function startVoice() {
     recognition = null;
     haptic('success');
     toast(`Heard: "${text}"`);
+    autoFillCategory();
   };
 
   recognition.onerror = () => { btn.classList.remove('listening'); recognition = null; toast("Couldn't hear that"); };
@@ -667,23 +681,25 @@ function renderActiveList() {
     return;
   }
 
-  const byStore = {};
+  const byCat = {};
   activeList.forEach(item => {
-    if (!byStore[item.store]) byStore[item.store] = [];
-    byStore[item.store].push(item);
+    const cat = itemCategory(item);
+    if (!byCat[cat]) byCat[cat] = [];
+    byCat[cat].push(item);
   });
 
   let html = '';
-  Object.keys(byStore).sort((a, b) => getStoreRank(a) - getStoreRank(b)).forEach(store => {
-    const icon = getStoreIcon(store);
-    const items = byStore[store];
+  CATEGORY_ORDER.forEach(cat => {
+    if (!byCat[cat]) return;
+    const info = CATEGORIES[cat];
+    const items = byCat[cat];
     const unchecked = items.filter(i => !i.checked).length;
     html += `
-      <div class="store-group">
-        <div class="store-group-header">
-          <div class="store-group-icon" style="background:${icon.color}">${icon.emoji}</div>
-          <div class="store-group-name">${esc(store)}</div>
-          <div class="store-group-count">${unchecked}/${items.length}</div>
+      <div class="cat-group">
+        <div class="cat-group-header">
+          <span class="cat-group-emoji">${info.emoji}</span>
+          <span class="cat-group-name">${esc(cat)}</span>
+          <span class="cat-group-count">${unchecked}/${items.length}</span>
         </div>
         <div class="items-grid">`;
 
@@ -721,7 +737,8 @@ function renderSuggestions() {
 
   if (searchQuery) {
     candidates = candidates.filter(i =>
-      i.name.toLowerCase().includes(searchQuery) || i.store.toLowerCase().includes(searchQuery)
+      i.name.toLowerCase().includes(searchQuery) ||
+      itemCategory(i).toLowerCase().includes(searchQuery)
     );
   }
 
@@ -730,7 +747,7 @@ function renderSuggestions() {
     return (b.lastUsed || 0) - (a.lastUsed || 0);
   });
 
-  const top = candidates.slice(0, 60);
+  const top = candidates.slice(0, 80);
 
   if (countEl) countEl.textContent = top.length;
 
@@ -741,28 +758,33 @@ function renderSuggestions() {
     return;
   }
 
-  const byStore = {};
+  const byCat = {};
   top.forEach(item => {
-    if (!byStore[item.store]) byStore[item.store] = [];
-    byStore[item.store].push(item);
+    const cat = itemCategory(item);
+    if (!byCat[cat]) byCat[cat] = [];
+    byCat[cat].push(item);
   });
 
   let html = '';
-  Object.keys(byStore).sort((a, b) => getStoreRank(a) - getStoreRank(b)).forEach(store => {
-    const icon = getStoreIcon(store);
+  CATEGORY_ORDER.forEach(cat => {
+    if (!byCat[cat]) return;
+    const info = CATEGORIES[cat];
+    const items = byCat[cat];
     html += `
-      <div class="store-section">
-        <div class="store-header">
-          <div class="store-icon" style="background:${icon.color}">${icon.emoji}</div>
-          <div><h2>${esc(store)}</h2><div class="label">Tap to add</div></div>
+      <div class="sug-section">
+        <div class="sug-header">
+          <span class="sug-emoji">${info.emoji}</span>
+          <span class="sug-cat-name">${esc(cat)}</span>
+          <span class="sug-count">${items.length}</span>
         </div>
-        <div class="suggestions-grid">`;
+        <div class="sug-items">`;
 
-    byStore[store].forEach(item => {
+    items.forEach(item => {
+      const cat = itemCategory(item);
       html += `
-        <div class="suggestion-item" onclick="window._addSuggestion('${jsesc(item.name)}', '${jsesc(item.store)}')">
+        <div class="sug-item" onclick="window._addSuggestion('${jsesc(item.name)}', '${jsesc(cat)}')">
           <span class="item-text">${esc(item.name)}</span>
-          <div class="suggestion-icon">+</div>
+          <span class="sug-plus">+</span>
         </div>`;
     });
     html += '</div></div>';
@@ -818,16 +840,14 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./sw.js').catch(console.error);
 }
 
-// Restore suggestions collapsed state
 suggestionsCollapsed = localStorage.getItem('suggestionsCollapsed') === 'true';
 
 // Expose to window
 window._toggle = toggleItem;
 window._remove = removeItem;
-window._addSuggestion = (name, store) => { addItem(name, store, 1); scrollTo({ top: 0, behavior: 'smooth' }); };
+window._addSuggestion = (name, category) => { addItem(name, category, 1); scrollTo({ top: 0, behavior: 'smooth' }); };
 window._switchList = switchToList;
-window._pickStore = pickStore;
-window._pickCustomStore = pickCustomStore;
+window._pickCategory = pickCategory;
 window.login = login;
 window.logout = logout;
 window.togglePhoneLogin = togglePhoneLogin;
@@ -845,8 +865,8 @@ window.installApp = installApp;
 window.dismissInstall = dismissInstall;
 window.clearChecked = clearChecked;
 window.clearAll = clearAll;
-window.openStorePicker = openStorePicker;
-window.closeStorePicker = closeStorePicker;
+window.openCategoryPicker = openCategoryPicker;
+window.closeCategoryPicker = closeCategoryPicker;
 window.toggleSuggestions = toggleSuggestions;
 
 // ── DOM ready ──
@@ -861,11 +881,21 @@ document.addEventListener('DOMContentLoaded', () => {
   if (form) {
     form.addEventListener('submit', e => {
       e.preventDefault();
-      if (!selectedStore) { toast("Pick a store first"); openStorePicker(); return; }
-      addItem(itemInput.value, selectedStore, qtyInput.value);
+      const cat = selectedCategory || autoCategory(itemInput.value);
+      addItem(itemInput.value, cat, qtyInput.value);
       itemInput.value = '';
       qtyInput.value = '1';
+      selectedCategory = '';
+      updateCategoryButton();
       itemInput.focus();
+    });
+  }
+
+  if (itemInput) {
+    let debounce;
+    itemInput.addEventListener('input', () => {
+      clearTimeout(debounce);
+      debounce = setTimeout(autoFillCategory, 300);
     });
   }
 
@@ -876,11 +906,10 @@ document.addEventListener('DOMContentLoaded', () => {
     suggestionsToggle.classList.add('collapsed');
   }
 
-  // Close bottom sheet on overlay tap
-  const storeSheet = document.getElementById('storeSheet');
-  if (storeSheet) {
-    storeSheet.addEventListener('click', e => {
-      if (e.target === storeSheet) closeStorePicker();
+  const catSheet = document.getElementById('categorySheet');
+  if (catSheet) {
+    catSheet.addEventListener('click', e => {
+      if (e.target === catSheet) closeCategoryPicker();
     });
   }
 
