@@ -28,7 +28,6 @@ const CATEGORIES = {
   'Fish & Seafood':      { emoji: '🐟', color: '#0284c7' },
   'Dairy & Eggs':        { emoji: '🧀', color: '#eab308' },
   'Bread & Bakery':      { emoji: '🍞', color: '#d97706' },
-  'Deli':                { emoji: '🥪', color: '#9333ea' },
   'Pasta & Grains':      { emoji: '🍝', color: '#b45309' },
   'Canned & Jarred':     { emoji: '🥫', color: '#b91c1c' },
   'Condiments & Spices': { emoji: '🧂', color: '#78716c' },
@@ -37,42 +36,56 @@ const CATEGORIES = {
   'Frozen Foods':        { emoji: '❄️', color: '#6366f1' },
   'Breakfast & Cereal':  { emoji: '🥣', color: '#ea580c' },
   'Baking':              { emoji: '🧁', color: '#db2777' },
-  'Household':           { emoji: '🧹', color: '#0d9488' },
+  'Household':           { emoji: '🏠', color: '#0d9488' },
   'Personal Care':       { emoji: '🧴', color: '#7c3aed' },
   'Wine & Spirits':      { emoji: '🍷', color: '#7f1d1d' },
-  'Other':               { emoji: '🛒', color: '#6b7280' }
+  'Other':               { emoji: '📦', color: '#6b7280' }
 };
 
 const CATEGORY_ORDER = Object.keys(CATEGORIES);
 
+// Keyword → category map. Keywords are checked with word-boundary matching.
+// Within each category, longer keywords are checked first to prevent partial matches.
 const KEYWORD_MAP = {
-  'Produce': ['apple','banana','orange','grape','strawberry','blueberry','raspberry','mango','pineapple','watermelon','peach','pear','plum','cherry','lemon','lime','avocado','tomato','potato','onion','garlic','ginger','lettuce','spinach','kale','arugula','broccoli','cauliflower','carrot','celery','cucumber','zucchini','squash','bell pepper','jalapeño','mushroom','corn','asparagus','green bean','pea','sweet potato','cabbage','radish','beet','eggplant','artichoke','brussels sprout','cilantro','parsley','basil','mint','rosemary','thyme','dill','chive','scallion','leek','shallot','fruit','vegetable','salad','herb','berries','melon'],
-  'Meat & Poultry': ['chicken','beef','pork','turkey','lamb','steak','ground beef','ground turkey','bacon','sausage','ham','veal','bison','duck','ribs','roast','tenderloin','thigh','drumstick','wing','breast','rotisserie','meatball','hot dog','jerky','chorizo','prosciutto','salami','pepperoni'],
-  'Fish & Seafood': ['fish','salmon','tuna','shrimp','crab','lobster','scallop','clam','mussel','oyster','sardine','anchovy','cod','halibut','tilapia','trout','swordfish','mahi','catfish','branzino','calamari','squid','octopus','seafood','prawn'],
-  'Dairy & Eggs': ['milk','cheese','yogurt','butter','cream','egg','sour cream','cottage cheese','cream cheese','mozzarella','cheddar','parmesan','ricotta','brie','gouda','swiss','feta','goat cheese','half and half','whipping cream','heavy cream','almond milk','oat milk','soy milk','buttermilk','ghee','kefir'],
-  'Bread & Bakery': ['bread','bagel','tortilla','pita','naan','croissant','muffin','roll','bun','baguette','sourdough','ciabatta','focaccia','english muffin','wrap','flatbread','cornbread','brioche','pretzel','crouton'],
-  'Deli': ['deli','cold cut','roast beef','turkey breast','sandwich','sub','wrap','coleslaw','potato salad','macaroni salad','hummus','olive'],
-  'Pasta & Grains': ['pasta','spaghetti','penne','fettuccine','linguine','macaroni','rice','quinoa','couscous','barley','oat','farro','noodle','ramen','udon','orzo','gnocchi','tortellini','ravioli','lasagna','flour','cornmeal','polenta','grain','lentil','chickpea','bean','black bean','kidney bean','pinto bean'],
-  'Canned & Jarred': ['canned','jarred','can of','tomato sauce','tomato paste','diced tomato','crushed tomato','soup','broth','stock','coconut milk canned','tuna can','sardine can','pickle','jam','jelly','preserves','peanut butter','almond butter','nutella','salsa','applesauce'],
-  'Condiments & Spices': ['salt','pepper','olive oil','vegetable oil','coconut oil','sesame oil','vinegar','soy sauce','ketchup','mustard','mayo','mayonnaise','hot sauce','sriracha','worcestershire','bbq sauce','teriyaki','ranch','dressing','cumin','paprika','cinnamon','oregano','turmeric','chili powder','garlic powder','onion powder','cayenne','nutmeg','vanilla','extract','seasoning','spice','marinade','relish','honey','maple syrup','agave'],
-  'Snacks': ['chip','cracker','popcorn','pretzel','nut','almond','cashew','walnut','pecan','pistachio','trail mix','granola bar','protein bar','candy','chocolate','gummy','cookie','snack','rice cake','fruit snack','dried fruit'],
-  'Beverages': ['water','juice','soda','pop','coffee','tea','kombucha','sparkling','seltzer','coconut water','sports drink','energy drink','gatorade','celsius','lemonade','iced tea','cold brew','creamer'],
-  'Frozen Foods': ['frozen','ice cream','popsicle','pizza frozen','waffle frozen','dumpling','tikka masala','burrito frozen','pot pie','tv dinner','gelato','sorbet','frozen fruit','frozen vegetable','frozen meal','egg bites'],
-  'Breakfast & Cereal': ['cereal','oatmeal','granola','pancake','waffle','syrup','breakfast'],
-  'Baking': ['baking soda','baking powder','yeast','sugar','brown sugar','powdered sugar','flour','cocoa','chocolate chip','sprinkle','frosting','cake mix','pie crust'],
-  'Household': ['paper towel','toilet paper','napkin','trash bag','dish soap','laundry detergent','fabric softener','bleach','disinfectant','sponge','scrub','cleaner','wipe','foil','plastic wrap','parchment','zip lock','storage bag','light bulb','battery','candle','match','broom','dustpan','mop','vacuum','air freshener','trash bin','plate','spoon','fork','knife','cup','glass','bowl','pot','pan','tupperware','container','oven mitt','towel','bath mat','laundry hamper','hanger','iron','can opener','wine opener','wine glass','dining chair'],
-  'Personal Care': ['shampoo','conditioner','body wash','soap bar','lotion','moisturizer','sunscreen','deodorant','toothpaste','toothbrush','floss','mouthwash','razor','shaving cream','cotton','q-tip','bandage','medicine','vitamin','supplement','tissue','face wash','hand sanitizer','bathing sponge'],
-  'Wine & Spirits': ['wine','beer','vodka','whiskey','rum','tequila','gin','bourbon','champagne','prosecco','hard seltzer','cocktail','mixer','bourbon','scotch','brandy','cognac','sake','cider','mezcal','liqueur','liquor'],
+  'Produce': ['sweet potato','bell pepper','green bean','brussels sprout','apple','banana','orange','grape','strawberry','blueberry','raspberry','mango','pineapple','watermelon','peach','pear','plum','cherry','lemon','lime','avocado','tomato','potato','onion','lettuce','spinach','kale','arugula','broccoli','cauliflower','carrot','celery','cucumber','zucchini','squash','mushroom','corn','asparagus','cabbage','radish','beet','eggplant','berries','melon','fruit','salad','herb'],
+  'Meat & Poultry': ['ground beef','ground turkey','chicken breast','chicken thigh','rotisserie chicken','chicken','beef','pork','turkey','lamb','steak','bacon','sausage','duck','ribs','roast','tenderloin','drumstick','wing','meatball','hot dog','jerky','chorizo','prosciutto','salami','pepperoni','meat','poultry'],
+  'Fish & Seafood': ['shrimp','salmon','tuna','crab','lobster','scallop','clam','mussel','oyster','sardine','anchovy','cod','halibut','tilapia','trout','swordfish','mahi','catfish','branzino','calamari','squid','octopus','seafood','prawn','fish'],
+  'Dairy & Eggs': ['cream cheese','sour cream','cottage cheese','almond milk','oat milk','soy milk','goat cheese','heavy cream','whipping cream','half and half','milk','cheese','yogurt','butter','cream','egg','mozzarella','cheddar','parmesan','ricotta','brie','feta','buttermilk','ghee','kefir','dairy'],
+  'Bread & Bakery': ['english muffin','bread','bagel','tortilla','pita','naan','croissant','muffin','roll','bun','baguette','sourdough','ciabatta','wrap','flatbread','pretzel','crouton'],
+  'Pasta & Grains': ['pasta','spaghetti','penne','fettuccine','linguine','macaroni','rice','quinoa','couscous','barley','farro','noodle','ramen','udon','orzo','gnocchi','tortellini','ravioli','lasagna','lentil','chickpea','black bean','kidney bean','grain'],
+  'Canned & Jarred': ['tomato sauce','tomato paste','peanut butter','almond butter','canned','jarred','broth','stock','pickle','jam','jelly','preserves','nutella','salsa','applesauce','soup'],
+  'Condiments & Spices': ['garlic powder','onion powder','chili powder','olive oil','vegetable oil','coconut oil','sesame oil','soy sauce','hot sauce','bbq sauce','maple syrup','salt','pepper','vinegar','ketchup','mustard','mayo','mayonnaise','sriracha','ranch','dressing','cumin','paprika','cinnamon','oregano','turmeric','cayenne','nutmeg','vanilla','seasoning','spice','honey','oil'],
+  'Snacks': ['granola bar','protein bar','trail mix','rice cake','fruit snack','dried fruit','chip','cracker','popcorn','nut','almond','cashew','walnut','pecan','pistachio','candy','chocolate','gummy','cookie','snack'],
+  'Beverages': ['coconut water','sparkling water','energy drink','iced tea','cold brew','water','juice','soda','coffee','tea','kombucha','sparkling','seltzer','lemonade','celsius','gatorade','creamer'],
+  'Frozen Foods': ['frozen vegetable','frozen fruit','frozen meal','frozen pizza','ice cream','popsicle','dumpling','gelato','sorbet','tikka masala','frozen','waffle'],
+  'Breakfast & Cereal': ['pancake mix','cereal','oatmeal','granola','pancake','syrup','breakfast','egg bites'],
+  'Baking': ['baking soda','baking powder','brown sugar','powdered sugar','chocolate chip','cake mix','pie crust','yeast','sugar','flour','cocoa','frosting','sprinkle'],
+  'Household': ['paper towel','toilet paper','trash bag','dish soap','laundry detergent','fabric softener','plastic wrap','zip lock','storage bag','light bulb','air freshener','trash bin','laundry hamper','can opener','wine opener','wine glass','oven mitt','bath mat','aluminum foil','parchment','napkin','sponge','scrub','cleaner','wipe','foil','battery','candle','broom','dustpan','mop','plate','spoon','fork','knife','cup','bowl','pot','pan','tupperware','container','towel','hanger','detergent','bleach','disinfectant'],
+  'Personal Care': ['hand sanitizer','body wash','face wash','shampoo','conditioner','lotion','moisturizer','sunscreen','deodorant','toothpaste','toothbrush','floss','mouthwash','razor','shaving cream','cotton','bandage','medicine','vitamin','supplement','tissue','soap','sponge bath'],
+  'Wine & Spirits': ['hard seltzer','wine','beer','vodka','whiskey','rum','tequila','gin','bourbon','champagne','prosecco','cocktail','scotch','brandy','cognac','sake','cider','mezcal','liqueur','liquor'],
 };
+
+// Sort keywords longest-first within each category for accurate matching
+for (const cat of Object.keys(KEYWORD_MAP)) {
+  KEYWORD_MAP[cat].sort((a, b) => b.length - a.length);
+}
 
 function autoCategory(name) {
   const lower = name.toLowerCase();
+  let bestMatch = null;
+  let bestLen = 0;
+
   for (const [cat, keywords] of Object.entries(KEYWORD_MAP)) {
     for (const kw of keywords) {
-      if (lower.includes(kw)) return cat;
+      if (kw.length <= bestLen) continue;
+      const re = new RegExp(`\\b${kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'i');
+      if (re.test(lower)) {
+        bestMatch = cat;
+        bestLen = kw.length;
+      }
     }
   }
-  return 'Other';
+  return bestMatch || 'Other';
 }
 
 function itemCategory(item) {
@@ -91,48 +104,58 @@ let searchQuery = '';
 let selectedCategory = '';
 let suggestionsCollapsed = false;
 
+// Generic, universally useful seed items
 const SEED_DATA = [
+  { name: 'Bananas', category: 'Produce', count: 20 },
+  { name: 'Avocados', category: 'Produce', count: 15 },
+  { name: 'Tomatoes', category: 'Produce', count: 12 },
+  { name: 'Onions', category: 'Produce', count: 12 },
+  { name: 'Garlic', category: 'Produce', count: 10 },
+  { name: 'Spinach', category: 'Produce', count: 10 },
+  { name: 'Lemons', category: 'Produce', count: 8 },
+  { name: 'Broccoli', category: 'Produce', count: 8 },
+  { name: 'Bell Peppers', category: 'Produce', count: 7 },
+  { name: 'Potatoes', category: 'Produce', count: 7 },
+  { name: 'Chicken Breast', category: 'Meat & Poultry', count: 25 },
+  { name: 'Ground Beef', category: 'Meat & Poultry', count: 15 },
+  { name: 'Bacon', category: 'Meat & Poultry', count: 12 },
+  { name: 'Rotisserie Chicken', category: 'Meat & Poultry', count: 10 },
+  { name: 'Salmon', category: 'Fish & Seafood', count: 15 },
+  { name: 'Shrimp', category: 'Fish & Seafood', count: 12 },
+  { name: 'Tuna', category: 'Fish & Seafood', count: 8 },
   { name: 'Eggs', category: 'Dairy & Eggs', count: 30 },
+  { name: 'Milk', category: 'Dairy & Eggs', count: 25 },
   { name: 'Butter', category: 'Dairy & Eggs', count: 20 },
-  { name: 'Olive oil', category: 'Condiments & Spices', count: 15 },
+  { name: 'Cheese', category: 'Dairy & Eggs', count: 15 },
+  { name: 'Yogurt', category: 'Dairy & Eggs', count: 12 },
+  { name: 'Bread', category: 'Bread & Bakery', count: 20 },
+  { name: 'Tortillas', category: 'Bread & Bakery', count: 10 },
+  { name: 'Rice', category: 'Pasta & Grains', count: 15 },
+  { name: 'Pasta', category: 'Pasta & Grains', count: 12 },
+  { name: 'Oats', category: 'Pasta & Grains', count: 8 },
+  { name: 'Olive Oil', category: 'Condiments & Spices', count: 15 },
   { name: 'Salt', category: 'Condiments & Spices', count: 10 },
   { name: 'Pepper', category: 'Condiments & Spices', count: 10 },
-  { name: 'Branzino Fish', category: 'Fish & Seafood', count: 12 },
-  { name: 'Tikka Masala', category: 'Frozen Foods', count: 15 },
-  { name: 'Argentinian Red Shrimp — Ginger Garlic Butter', category: 'Fish & Seafood', count: 12 },
-  { name: 'Wild Raw Argentinian Red Shrimp (1 lb bag)', category: 'Fish & Seafood', count: 12 },
-  { name: 'Pulled Chicken Salsa Verde', category: 'Frozen Foods', count: 15 },
-  { name: 'Pre-Cooked Grilled Chicken Strips', category: 'Meat & Poultry', count: 15 },
-  { name: 'Bacon Cheddar Egg Bites', category: 'Breakfast & Cereal', count: 15 },
-  { name: 'Kirkland Rotisserie Chicken', category: 'Meat & Poultry', count: 25 },
-  { name: 'Kirkland Grilled Chicken Breast Skewers', category: 'Meat & Poultry', count: 10 },
-  { name: 'Kirkland Wild Alaskan Sockeye Salmon', category: 'Fish & Seafood', count: 10 },
-  { name: 'Kahiki Chicken Rice Bowls — Teriyaki', category: 'Frozen Foods', count: 8 },
-  { name: 'Bibigo Beef Pho Steamed Dumplings', category: 'Frozen Foods', count: 10 },
-  { name: 'Kirkland Boneless Chicken Breasts (frozen)', category: 'Frozen Foods', count: 10 },
+  { name: 'Soy Sauce', category: 'Condiments & Spices', count: 8 },
+  { name: 'Honey', category: 'Condiments & Spices', count: 7 },
+  { name: 'Hot Sauce', category: 'Condiments & Spices', count: 7 },
   { name: 'Coconut Water', category: 'Beverages', count: 15 },
-  { name: 'Celsius', category: 'Beverages', count: 15 },
-  { name: 'Laundry Detergent', category: 'Household', count: 5 },
-  { name: 'Toilet Paper', category: 'Household', count: 20 },
+  { name: 'Coffee', category: 'Beverages', count: 20 },
+  { name: 'Sparkling Water', category: 'Beverages', count: 10 },
+  { name: 'Frozen Vegetables', category: 'Frozen Foods', count: 10 },
+  { name: 'Ice Cream', category: 'Frozen Foods', count: 8 },
+  { name: 'Cereal', category: 'Breakfast & Cereal', count: 10 },
+  { name: 'Granola', category: 'Breakfast & Cereal', count: 8 },
   { name: 'Paper Towels', category: 'Household', count: 20 },
-  { name: 'Kitchen Napkins', category: 'Household', count: 10 },
-  { name: 'Trash Bags', category: 'Household', count: 10 },
-  { name: 'Plates', category: 'Household', count: 5 },
-  { name: 'Cups', category: 'Household', count: 5 },
-  { name: 'Spoons', category: 'Household', count: 5 },
-  { name: 'Wine Glass', category: 'Household', count: 5 },
-  { name: 'Hand Towels', category: 'Household', count: 5 },
-  { name: 'Bathing Sponge', category: 'Personal Care', count: 2 },
-  { name: 'Broom and Dustpan', category: 'Household', count: 1 },
-  { name: 'Tupperware', category: 'Household', count: 5 },
-  { name: 'Oven Mitts', category: 'Household', count: 1 },
-  { name: 'Can Opener', category: 'Household', count: 1 },
-  { name: 'Wine Opener', category: 'Household', count: 1 },
-  { name: 'Bath Mat', category: 'Household', count: 1 },
-  { name: 'Laundry Hamper', category: 'Household', count: 1 },
-  { name: 'Trash Bin', category: 'Household', count: 1 },
-  { name: 'Rain Jacket', category: 'Other', count: 1 },
-  { name: 'Dining Chair', category: 'Other', count: 2 },
+  { name: 'Toilet Paper', category: 'Household', count: 20 },
+  { name: 'Trash Bags', category: 'Household', count: 15 },
+  { name: 'Dish Soap', category: 'Household', count: 10 },
+  { name: 'Laundry Detergent', category: 'Household', count: 10 },
+  { name: 'Sponges', category: 'Household', count: 8 },
+  { name: 'Aluminum Foil', category: 'Household', count: 5 },
+  { name: 'Shampoo', category: 'Personal Care', count: 8 },
+  { name: 'Toothpaste', category: 'Personal Care', count: 8 },
+  { name: 'Body Wash', category: 'Personal Care', count: 7 },
 ];
 
 const esc = s => s.replace(/['"<>&]/g, c => ({ "'": '&#39;', '"': '&quot;', '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]));
@@ -257,12 +280,14 @@ function setupListeners() {
   onValue(listRef, snap => {
     activeList = snap.val() ? Object.entries(snap.val()).map(([id, val]) => ({ id, ...val })) : [];
     renderActiveList();
+    renderQuickAdd();
   });
 
   onValue(suggestionsRef, snap => {
     const data = snap.val();
     if (data) suggestionDB = data;
     else seedDatabase();
+    renderQuickAdd();
     renderSuggestions();
   });
 }
@@ -468,6 +493,7 @@ function switchToList(listId) {
   onValue(target, snap => {
     activeList = snap.val() ? Object.entries(snap.val()).map(([id, val]) => ({ id, ...val })) : [];
     renderActiveList();
+    renderQuickAdd();
   });
   renderListTabs();
 }
@@ -481,7 +507,7 @@ function openShareModal(code) {
     const shareUrl = `${baseUrl}?join=${code}`;
     content.innerHTML = `
       <h2>Share This List</h2>
-      <p>Send this link to invite others to collaborate in real-time.</p>
+      <p>Send this link to invite others.</p>
       <div class="share-link-box">
         <input type="text" value="${shareUrl}" readonly id="shareLinkInput" />
         <button onclick="window.copyShareLink()">Copy</button>
@@ -494,9 +520,9 @@ function openShareModal(code) {
       <h2>Share & Collaborate</h2>
       <p>Create a shared list or join one with a code.</p>
       <input type="text" id="sharedListName" placeholder="New list name (e.g. Household)" />
-      <button class="auth-btn google" style="margin-bottom:16px" onclick="window.createSharedList()">Create Shared List</button>
-      <div style="text-align:center;color:var(--text-muted);font-size:0.85rem;margin-bottom:12px">— or join existing —</div>
-      <input type="text" id="joinCodeInput" placeholder="Enter invite code (e.g. AB12CD)" style="text-transform:uppercase" />
+      <button class="auth-btn google" style="margin-bottom:14px" onclick="window.createSharedList()">Create Shared List</button>
+      <div style="text-align:center;color:var(--text-muted);font-size:0.82rem;margin-bottom:10px">— or join existing —</div>
+      <input type="text" id="joinCodeInput" placeholder="Enter invite code" style="text-transform:uppercase" />
       <div class="modal-actions">
         <button class="btn-secondary" onclick="window.closeShareModal()">Cancel</button>
         <button class="btn-primary" onclick="window.joinSharedList(document.getElementById('joinCodeInput').value)">Join</button>
@@ -669,17 +695,47 @@ function initLongPress(container) {
 }
 
 // ── Rendering ──
+function renderQuickAdd() {
+  const container = document.getElementById('quickAddRow');
+  if (!container) return;
+  const activeNames = new Set(activeList.map(i => i.name.toLowerCase()));
+
+  let candidates = Object.entries(suggestionDB)
+    .map(([name, data]) => ({ name, ...data }))
+    .filter(i => !activeNames.has(i.name.toLowerCase()));
+
+  candidates.sort((a, b) => {
+    if (b.count !== a.count) return b.count - a.count;
+    return (b.lastUsed || 0) - (a.lastUsed || 0);
+  });
+
+  const top = candidates.slice(0, 12);
+  if (top.length === 0) { container.innerHTML = ''; return; }
+
+  container.innerHTML = top.map(item => {
+    const cat = itemCategory(item);
+    const info = CATEGORIES[cat] || CATEGORIES['Other'];
+    return `<button class="quick-pill" onclick="window._addSuggestion('${jsesc(item.name)}', '${jsesc(cat)}')">${info.emoji} ${esc(item.name)}</button>`;
+  }).join('');
+}
+
 function renderActiveList() {
   const container = document.getElementById('activeListContainer');
+  const countEl = document.getElementById('listCount');
 
   if (activeList.length === 0) {
+    if (countEl) countEl.textContent = '';
     container.innerHTML = `
       <div class="empty-state">
         <div class="empty-icon">🛒</div>
-        <div>Your list is empty.<br>Add items above or tap a suggestion below.</div>
+        <div>Your list is empty.<br>Tap a suggestion or add items above.</div>
       </div>`;
     return;
   }
+
+  const checked = activeList.filter(i => i.checked).length;
+  const total = activeList.length;
+  if (countEl) countEl.textContent = `${checked}/${total}`;
 
   const byCat = {};
   activeList.forEach(item => {
@@ -693,13 +749,11 @@ function renderActiveList() {
     if (!byCat[cat]) return;
     const info = CATEGORIES[cat];
     const items = byCat[cat];
-    const unchecked = items.filter(i => !i.checked).length;
     html += `
       <div class="cat-group">
         <div class="cat-group-header">
           <span class="cat-group-emoji">${info.emoji}</span>
           <span class="cat-group-name">${esc(cat)}</span>
-          <span class="cat-group-count">${unchecked}/${items.length}</span>
         </div>
         <div class="items-grid">`;
 
@@ -754,7 +808,7 @@ function renderSuggestions() {
   if (top.length === 0) {
     container.innerHTML = searchQuery
       ? `<div class="empty-state"><div class="empty-icon">🔍</div><div>No matches for "${esc(searchQuery)}"</div></div>`
-      : `<div class="empty-state"><div class="empty-icon">💡</div><div>No suggestions yet. Add items to build your list.</div></div>`;
+      : `<div class="empty-state"><div class="empty-icon">💡</div><div>Add items to build your suggestions.</div></div>`;
     return;
   }
 
@@ -780,12 +834,8 @@ function renderSuggestions() {
         <div class="sug-items">`;
 
     items.forEach(item => {
-      const cat = itemCategory(item);
-      html += `
-        <div class="sug-item" onclick="window._addSuggestion('${jsesc(item.name)}', '${jsesc(cat)}')">
-          <span class="item-text">${esc(item.name)}</span>
-          <span class="sug-plus">+</span>
-        </div>`;
+      const c = itemCategory(item);
+      html += `<button class="sug-pill" onclick="window._addSuggestion('${jsesc(item.name)}', '${jsesc(c)}')">${esc(item.name)}<span class="sug-plus">+</span></button>`;
     });
     html += '</div></div>';
   });
@@ -842,7 +892,6 @@ if ('serviceWorker' in navigator) {
 
 suggestionsCollapsed = localStorage.getItem('suggestionsCollapsed') === 'true';
 
-// Expose to window
 window._toggle = toggleItem;
 window._remove = removeItem;
 window._addSuggestion = (name, category) => { addItem(name, category, 1); scrollTo({ top: 0, behavior: 'smooth' }); };
@@ -869,7 +918,6 @@ window.openCategoryPicker = openCategoryPicker;
 window.closeCategoryPicker = closeCategoryPicker;
 window.toggleSuggestions = toggleSuggestions;
 
-// ── DOM ready ──
 document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('addForm');
   const itemInput = document.getElementById('itemInput');
@@ -913,7 +961,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Pull-to-refresh for standalone PWA
   if (window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches) {
     let pullStartY = 0, pulling = false;
     const indicator = document.getElementById('pullIndicator');
