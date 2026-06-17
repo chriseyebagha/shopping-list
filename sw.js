@@ -1,4 +1,4 @@
-const CACHE_NAME = 'shoplist-v3.1';
+const CACHE_NAME = 'shoplist-v4.0';
 const ASSETS = [
   './',
   './index.html',

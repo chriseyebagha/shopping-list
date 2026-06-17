@@ -23,31 +23,29 @@ const provider = new GoogleAuthProvider();
 
 // ── Categories ──
 const CATEGORIES = {
-  'Produce':             { emoji: '🥬', color: '#16a34a' },
-  'Meat & Poultry':      { emoji: '🥩', color: '#dc2626' },
-  'Fish & Seafood':      { emoji: '🐟', color: '#0284c7' },
-  'Dairy & Eggs':        { emoji: '🧀', color: '#eab308' },
-  'Bread & Bakery':      { emoji: '🍞', color: '#d97706' },
-  'Pasta & Grains':      { emoji: '🍝', color: '#b45309' },
-  'Canned & Jarred':     { emoji: '🥫', color: '#b91c1c' },
-  'Condiments & Spices': { emoji: '🧂', color: '#78716c' },
-  'Snacks':              { emoji: '🍿', color: '#f59e0b' },
-  'Beverages':           { emoji: '🥤', color: '#0891b2' },
-  'Frozen Foods':        { emoji: '❄️', color: '#6366f1' },
-  'Breakfast & Cereal':  { emoji: '🥣', color: '#ea580c' },
-  'Baking':              { emoji: '🧁', color: '#db2777' },
-  'Household':           { emoji: '🏠', color: '#0d9488' },
-  'Personal Care':       { emoji: '🧴', color: '#7c3aed' },
-  'Wine & Spirits':      { emoji: '🍷', color: '#7f1d1d' },
-  'Other':               { emoji: '📦', color: '#6b7280' }
+  'Produce':             { emoji: '🥬', order: 0 },
+  'Meat & Poultry':      { emoji: '🥩', order: 1 },
+  'Fish & Seafood':      { emoji: '🐟', order: 2 },
+  'Dairy & Eggs':        { emoji: '🧀', order: 3 },
+  'Bread & Bakery':      { emoji: '🍞', order: 4 },
+  'Pasta & Grains':      { emoji: '🍝', order: 5 },
+  'Canned & Jarred':     { emoji: '🥫', order: 6 },
+  'Condiments & Spices': { emoji: '🧂', order: 7 },
+  'Snacks':              { emoji: '🍿', order: 8 },
+  'Beverages':           { emoji: '🥤', order: 9 },
+  'Frozen Foods':        { emoji: '❄️', order: 10 },
+  'Breakfast & Cereal':  { emoji: '🥣', order: 11 },
+  'Baking':              { emoji: '🧁', order: 12 },
+  'Household':           { emoji: '🏠', order: 13 },
+  'Personal Care':       { emoji: '🧴', order: 14 },
+  'Wine & Spirits':      { emoji: '🍷', order: 15 },
+  'Other':               { emoji: '📦', order: 16 }
 };
 
-const CATEGORY_ORDER = Object.keys(CATEGORIES);
+const CAT_ORDER = Object.keys(CATEGORIES).sort((a, b) => CATEGORIES[a].order - CATEGORIES[b].order);
 
-// Keyword → category map. Keywords are checked with word-boundary matching.
-// Within each category, longer keywords are checked first to prevent partial matches.
 const KEYWORD_MAP = {
-  'Produce': ['sweet potato','bell pepper','green bean','brussels sprout','apple','banana','orange','grape','strawberry','blueberry','raspberry','mango','pineapple','watermelon','peach','pear','plum','cherry','lemon','lime','avocado','tomato','potato','onion','lettuce','spinach','kale','arugula','broccoli','cauliflower','carrot','celery','cucumber','zucchini','squash','mushroom','corn','asparagus','cabbage','radish','beet','eggplant','berries','melon','fruit','salad','herb'],
+  'Produce': ['sweet potato','bell pepper','green bean','brussels sprout','apple','banana','orange','grape','strawberry','blueberry','raspberry','mango','pineapple','watermelon','peach','pear','plum','cherry','lemon','lime','avocado','tomato','potato','onion','lettuce','spinach','kale','arugula','broccoli','cauliflower','carrot','celery','cucumber','zucchini','squash','mushroom','corn','asparagus','cabbage','radish','beet','eggplant','berries','melon','fruit','salad','herb','cilantro','parsley','basil','mint','ginger','jalapeño','pepper'],
   'Meat & Poultry': ['ground beef','ground turkey','chicken breast','chicken thigh','rotisserie chicken','chicken','beef','pork','turkey','lamb','steak','bacon','sausage','duck','ribs','roast','tenderloin','drumstick','wing','meatball','hot dog','jerky','chorizo','prosciutto','salami','pepperoni','meat','poultry'],
   'Fish & Seafood': ['shrimp','salmon','tuna','crab','lobster','scallop','clam','mussel','oyster','sardine','anchovy','cod','halibut','tilapia','trout','swordfish','mahi','catfish','branzino','calamari','squid','octopus','seafood','prawn','fish'],
   'Dairy & Eggs': ['cream cheese','sour cream','cottage cheese','almond milk','oat milk','soy milk','goat cheese','heavy cream','whipping cream','half and half','milk','cheese','yogurt','butter','cream','egg','mozzarella','cheddar','parmesan','ricotta','brie','feta','buttermilk','ghee','kefir','dairy'],
@@ -60,32 +58,26 @@ const KEYWORD_MAP = {
   'Frozen Foods': ['frozen vegetable','frozen fruit','frozen meal','frozen pizza','ice cream','popsicle','dumpling','gelato','sorbet','tikka masala','frozen','waffle'],
   'Breakfast & Cereal': ['pancake mix','cereal','oatmeal','granola','pancake','syrup','breakfast','egg bites'],
   'Baking': ['baking soda','baking powder','brown sugar','powdered sugar','chocolate chip','cake mix','pie crust','yeast','sugar','flour','cocoa','frosting','sprinkle'],
-  'Household': ['paper towel','toilet paper','trash bag','dish soap','laundry detergent','fabric softener','plastic wrap','zip lock','storage bag','light bulb','air freshener','trash bin','laundry hamper','can opener','wine opener','wine glass','oven mitt','bath mat','aluminum foil','parchment','napkin','sponge','scrub','cleaner','wipe','foil','battery','candle','broom','dustpan','mop','plate','spoon','fork','knife','cup','bowl','pot','pan','tupperware','container','towel','hanger','detergent','bleach','disinfectant'],
+  'Household': ['paper towel','toilet paper','trash bag','dish soap','laundry detergent','fabric softener','plastic wrap','zip lock','storage bag','light bulb','air freshener','trash bin','laundry hamper','can opener','wine opener','wine glass','oven mitt','bath mat','aluminum foil','parchment','napkin','sponge','scrub','cleaner','wipe','foil','battery','candle','broom','dustpan','mop','plate','spoon','fork','knife','cup','bowl','pot','pan','tupperware','container','towel','hanger','detergent','bleach','disinfectant','laundry'],
   'Personal Care': ['hand sanitizer','body wash','face wash','shampoo','conditioner','lotion','moisturizer','sunscreen','deodorant','toothpaste','toothbrush','floss','mouthwash','razor','shaving cream','cotton','bandage','medicine','vitamin','supplement','tissue','soap','sponge bath'],
   'Wine & Spirits': ['hard seltzer','wine','beer','vodka','whiskey','rum','tequila','gin','bourbon','champagne','prosecco','cocktail','scotch','brandy','cognac','sake','cider','mezcal','liqueur','liquor'],
 };
 
-// Sort keywords longest-first within each category for accurate matching
 for (const cat of Object.keys(KEYWORD_MAP)) {
   KEYWORD_MAP[cat].sort((a, b) => b.length - a.length);
 }
 
 function autoCategory(name) {
   const lower = name.toLowerCase();
-  let bestMatch = null;
-  let bestLen = 0;
-
+  let best = null, bestLen = 0;
   for (const [cat, keywords] of Object.entries(KEYWORD_MAP)) {
     for (const kw of keywords) {
       if (kw.length <= bestLen) continue;
       const re = new RegExp(`\\b${kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'i');
-      if (re.test(lower)) {
-        bestMatch = cat;
-        bestLen = kw.length;
-      }
+      if (re.test(lower)) { best = cat; bestLen = kw.length; }
     }
   }
-  return bestMatch || 'Other';
+  return best || 'Other';
 }
 
 function itemCategory(item) {
@@ -93,18 +85,7 @@ function itemCategory(item) {
   return autoCategory(item.name);
 }
 
-// ── State ──
-let listRef, suggestionsRef;
-let currentUser = null;
-let activeList = [];
-let suggestionDB = {};
-let activeListId = 'personal';
-let sharedLists = {};
-let searchQuery = '';
-let selectedCategory = '';
-let suggestionsCollapsed = false;
-
-// Generic, universally useful seed items
+// ── Seed data ──
 const SEED_DATA = [
   { name: 'Bananas', category: 'Produce', count: 20 },
   { name: 'Avocados', category: 'Produce', count: 15 },
@@ -119,10 +100,8 @@ const SEED_DATA = [
   { name: 'Chicken Breast', category: 'Meat & Poultry', count: 25 },
   { name: 'Ground Beef', category: 'Meat & Poultry', count: 15 },
   { name: 'Bacon', category: 'Meat & Poultry', count: 12 },
-  { name: 'Rotisserie Chicken', category: 'Meat & Poultry', count: 10 },
   { name: 'Salmon', category: 'Fish & Seafood', count: 15 },
   { name: 'Shrimp', category: 'Fish & Seafood', count: 12 },
-  { name: 'Tuna', category: 'Fish & Seafood', count: 8 },
   { name: 'Eggs', category: 'Dairy & Eggs', count: 30 },
   { name: 'Milk', category: 'Dairy & Eggs', count: 25 },
   { name: 'Butter', category: 'Dairy & Eggs', count: 20 },
@@ -132,48 +111,50 @@ const SEED_DATA = [
   { name: 'Tortillas', category: 'Bread & Bakery', count: 10 },
   { name: 'Rice', category: 'Pasta & Grains', count: 15 },
   { name: 'Pasta', category: 'Pasta & Grains', count: 12 },
-  { name: 'Oats', category: 'Pasta & Grains', count: 8 },
   { name: 'Olive Oil', category: 'Condiments & Spices', count: 15 },
-  { name: 'Salt', category: 'Condiments & Spices', count: 10 },
-  { name: 'Pepper', category: 'Condiments & Spices', count: 10 },
   { name: 'Soy Sauce', category: 'Condiments & Spices', count: 8 },
   { name: 'Honey', category: 'Condiments & Spices', count: 7 },
-  { name: 'Hot Sauce', category: 'Condiments & Spices', count: 7 },
-  { name: 'Coconut Water', category: 'Beverages', count: 15 },
   { name: 'Coffee', category: 'Beverages', count: 20 },
+  { name: 'Coconut Water', category: 'Beverages', count: 15 },
   { name: 'Sparkling Water', category: 'Beverages', count: 10 },
   { name: 'Frozen Vegetables', category: 'Frozen Foods', count: 10 },
   { name: 'Ice Cream', category: 'Frozen Foods', count: 8 },
   { name: 'Cereal', category: 'Breakfast & Cereal', count: 10 },
-  { name: 'Granola', category: 'Breakfast & Cereal', count: 8 },
   { name: 'Paper Towels', category: 'Household', count: 20 },
   { name: 'Toilet Paper', category: 'Household', count: 20 },
   { name: 'Trash Bags', category: 'Household', count: 15 },
   { name: 'Dish Soap', category: 'Household', count: 10 },
   { name: 'Laundry Detergent', category: 'Household', count: 10 },
-  { name: 'Sponges', category: 'Household', count: 8 },
-  { name: 'Aluminum Foil', category: 'Household', count: 5 },
   { name: 'Shampoo', category: 'Personal Care', count: 8 },
   { name: 'Toothpaste', category: 'Personal Care', count: 8 },
-  { name: 'Body Wash', category: 'Personal Care', count: 7 },
 ];
 
+// ── State ──
+let listRef, suggestionsRef;
+let currentUser = null;
+let activeList = [];
+let suggestionDB = {};
+let activeListId = 'personal';
+let sharedLists = {};
+let sugCollapsed = localStorage.getItem('sugCollapsed') === 'true';
+let doneCollapsed = localStorage.getItem('doneCollapsed') !== 'false';
+
 const esc = s => s.replace(/['"<>&]/g, c => ({ "'": '&#39;', '"': '&quot;', '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]));
-const jsesc = s => s.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 
 function haptic(style) {
   if (!navigator.vibrate) return;
   if (style === 'light') navigator.vibrate(10);
   else if (style === 'medium') navigator.vibrate(20);
-  else if (style === 'heavy') navigator.vibrate([30, 10, 30]);
   else if (style === 'success') navigator.vibrate([10, 30, 10]);
+  else if (style === 'heavy') navigator.vibrate([30, 10, 30]);
 }
 
 function toast(msg) {
   const el = document.getElementById('toast');
   el.textContent = msg;
   el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 2200);
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove('show'), 2200);
 }
 
 // ── Dark mode ──
@@ -202,8 +183,7 @@ function logout() {
   signOut(auth).then(() => location.reload()).catch(console.error);
 }
 
-let recaptchaVerifier = null;
-let confirmResult = null;
+let recaptchaVerifier = null, confirmResult = null;
 
 function togglePhoneLogin() {
   document.getElementById('mainLoginOptions').classList.add('hidden');
@@ -246,31 +226,24 @@ function verifyCode() {
 // ── Auth state ──
 onAuthStateChanged(auth, user => {
   const overlay = document.getElementById('loginOverlay');
-  const topBar = document.getElementById('topBar');
   const appEl = document.getElementById('app');
-
   if (user) {
     currentUser = user;
     overlay.style.display = 'none';
-    topBar.classList.remove('hidden');
     appEl.classList.remove('hidden');
-
     const name = user.displayName ? user.displayName.split(' ')[0] : 'User';
     const photo = user.photoURL || '';
     document.getElementById('userDisplay').innerHTML = photo
       ? `<img src="${photo}" class="user-avatar" alt="" /><span>${esc(name)}'s List</span>`
       : `<span>${esc(name)}'s List</span>`;
-
     listRef = ref(db, `users/${user.uid}/shoppingList`);
     suggestionsRef = ref(db, `users/${user.uid}/suggestions`);
-
     setupListeners();
     loadSharedLists();
     checkShareInvite();
   } else {
     currentUser = null;
     overlay.style.display = 'flex';
-    topBar.classList.add('hidden');
     appEl.classList.add('hidden');
   }
 });
@@ -279,16 +252,13 @@ onAuthStateChanged(auth, user => {
 function setupListeners() {
   onValue(listRef, snap => {
     activeList = snap.val() ? Object.entries(snap.val()).map(([id, val]) => ({ id, ...val })) : [];
-    renderActiveList();
-    renderQuickAdd();
+    render();
   });
-
   onValue(suggestionsRef, snap => {
     const data = snap.val();
     if (data) suggestionDB = data;
     else seedDatabase();
-    renderQuickAdd();
-    renderSuggestions();
+    render();
   });
 }
 
@@ -300,28 +270,29 @@ function seedDatabase() {
   update(suggestionsRef, updates);
 }
 
-// ── CRUD ──
-function addItem(name, category, qty) {
+// ── CRUD (Doherty Threshold — optimistic, instant UI) ──
+function addItem(name, qty) {
   if (!currentUser || !name.trim()) return;
   name = name.trim();
-  category = category || autoCategory(name);
+  const category = autoCategory(name);
   qty = Math.max(1, parseInt(qty) || 1);
 
-  const exists = activeList.some(i => i.name.toLowerCase() === name.toLowerCase());
-  if (exists) { toast(`"${name}" already on list`); haptic('heavy'); return; }
+  if (activeList.some(i => i.name.toLowerCase() === name.toLowerCase())) {
+    toast(`"${name}" is already on your list`);
+    haptic('heavy');
+    return;
+  }
 
   const targetRef = activeListId === 'personal' ? listRef : ref(db, `sharedLists/${activeListId}/items`);
   push(targetRef, { name, category, qty, checked: false });
-  updateStats(name, category);
-  haptic('success');
-  toast(`Added ${name}`);
-}
 
-function updateStats(name, category) {
   const current = suggestionDB[name];
   const updates = {};
   updates[name] = { category, count: current ? current.count + 1 : 1, lastUsed: Date.now() };
   update(suggestionsRef, updates);
+
+  haptic('success');
+  toast(`Added ${name}`);
 }
 
 function removeItem(id) {
@@ -330,27 +301,25 @@ function removeItem(id) {
   const el = document.querySelector(`[data-id="${id}"]`);
   if (el) {
     el.classList.add('removing');
-    setTimeout(() => {
-      const path = activeListId === 'personal'
-        ? `users/${currentUser.uid}/shoppingList/${id}`
-        : `sharedLists/${activeListId}/items/${id}`;
-      remove(ref(db, path));
-    }, 280);
+    setTimeout(() => doRemove(id), 280);
   } else {
-    const path = activeListId === 'personal'
-      ? `users/${currentUser.uid}/shoppingList/${id}`
-      : `sharedLists/${activeListId}/items/${id}`;
-    remove(ref(db, path));
+    doRemove(id);
   }
 }
 
-function toggleItem(id, currentStatus) {
-  if (!currentUser) return;
+function doRemove(id) {
+  const path = activeListId === 'personal'
+    ? `users/${currentUser.uid}/shoppingList/${id}`
+    : `sharedLists/${activeListId}/items/${id}`;
+  remove(ref(db, path));
+}
+
+function toggleItem(id, currentChecked) {
   haptic('light');
   const path = activeListId === 'personal'
     ? `users/${currentUser.uid}/shoppingList/${id}`
     : `sharedLists/${activeListId}/items/${id}`;
-  update(ref(db, path), { checked: !currentStatus });
+  update(ref(db, path), { checked: !currentChecked });
 }
 
 function clearChecked() {
@@ -369,76 +338,7 @@ function clearChecked() {
   }
 }
 
-function clearAll() {
-  if (!currentUser || !confirm('Delete ALL items?')) return;
-  const targetRef = activeListId === 'personal' ? listRef : ref(db, `sharedLists/${activeListId}/items`);
-  set(targetRef, null);
-  haptic('heavy');
-  toast("List cleared");
-}
-
-// ── Category picker bottom sheet ──
-function openCategoryPicker() {
-  const overlay = document.getElementById('categorySheet');
-  let html = '<div class="cat-grid">';
-
-  CATEGORY_ORDER.forEach(name => {
-    const cat = CATEGORIES[name];
-    const sel = selectedCategory === name ? 'selected' : '';
-    html += `
-      <div class="cat-grid-item ${sel}" onclick="window._pickCategory('${jsesc(name)}')">
-        <span class="cat-emoji">${cat.emoji}</span>
-        <span class="cat-name">${esc(name)}</span>
-      </div>`;
-  });
-
-  html += '</div>';
-  document.getElementById('catGridContainer').innerHTML = html;
-  overlay.classList.add('open');
-  haptic('light');
-}
-
-function closeCategoryPicker() {
-  document.getElementById('categorySheet').classList.remove('open');
-}
-
-function pickCategory(name) {
-  selectedCategory = name;
-  updateCategoryButton();
-  closeCategoryPicker();
-  haptic('light');
-}
-
-function updateCategoryButton() {
-  const btn = document.getElementById('catPickerBtn');
-  if (!btn) return;
-  if (selectedCategory && CATEGORIES[selectedCategory]) {
-    const cat = CATEGORIES[selectedCategory];
-    btn.innerHTML = `<span class="cat-btn-emoji">${cat.emoji}</span> ${esc(selectedCategory)} <span class="chevron">▼</span>`;
-    btn.classList.add('has-value');
-  } else {
-    btn.innerHTML = `Category <span class="chevron">▼</span>`;
-    btn.classList.remove('has-value');
-  }
-}
-
-function autoFillCategory() {
-  const input = document.getElementById('itemInput');
-  if (!input) return;
-  const name = input.value.trim();
-  if (name.length < 2) return;
-  const cat = autoCategory(name);
-  if (cat !== 'Other' && !selectedCategory) {
-    selectedCategory = cat;
-    updateCategoryButton();
-  }
-}
-
 // ── Shared lists ──
-function generateShareCode() {
-  return Math.random().toString(36).substring(2, 8).toUpperCase();
-}
-
 function loadSharedLists() {
   if (!currentUser) return;
   onValue(ref(db, `users/${currentUser.uid}/sharedLists`), snap => {
@@ -449,9 +349,10 @@ function loadSharedLists() {
 
 function createSharedList() {
   if (!currentUser) return;
-  const name = document.getElementById('sharedListName').value.trim();
+  const nameInput = document.getElementById('sharedListName');
+  const name = nameInput ? nameInput.value.trim() : '';
   if (!name) { toast("Enter a list name"); return; }
-  const code = generateShareCode();
+  const code = Math.random().toString(36).substring(2, 8).toUpperCase();
   const updates = {};
   updates[`sharedLists/${code}/meta`] = { name, owner: currentUser.uid, ownerName: currentUser.displayName || 'User', createdAt: Date.now() };
   updates[`sharedLists/${code}/members/${currentUser.uid}`] = { name: currentUser.displayName || 'User', photo: currentUser.photoURL || '', joinedAt: Date.now() };
@@ -484,48 +385,47 @@ function joinSharedList(code) {
 function switchToList(listId) {
   if (activeListId !== 'personal') off(ref(db, `sharedLists/${activeListId}/items`));
   else off(listRef);
-
   activeListId = listId;
   activeList = [];
-  renderActiveList();
-
+  render();
   const target = listId === 'personal' ? listRef : ref(db, `sharedLists/${listId}/items`);
   onValue(target, snap => {
     activeList = snap.val() ? Object.entries(snap.val()).map(([id, val]) => ({ id, ...val })) : [];
-    renderActiveList();
-    renderQuickAdd();
+    render();
   });
   renderListTabs();
 }
 
 function openShareModal(code) {
   const modal = document.getElementById('shareModal');
-  const content = document.getElementById('shareModalContent');
+  const sheet = document.getElementById('shareSheet');
   const baseUrl = location.origin + location.pathname;
 
   if (code) {
     const shareUrl = `${baseUrl}?join=${code}`;
-    content.innerHTML = `
+    sheet.innerHTML = `
+      <div class="sheet-handle"></div>
       <h2>Share This List</h2>
       <p>Send this link to invite others.</p>
-      <div class="share-link-box">
+      <div class="share-link-row">
         <input type="text" value="${shareUrl}" readonly id="shareLinkInput" />
         <button onclick="window.copyShareLink()">Copy</button>
       </div>
-      <div id="sharedMembersContainer"></div>
-      <div class="modal-actions"><button class="btn-secondary" onclick="window.closeShareModal()">Done</button></div>`;
+      <div id="membersContainer"></div>
+      <div class="sheet-actions"><button class="btn-sec" onclick="window.closeShareModal()">Done</button></div>`;
     loadMembers(code);
   } else {
-    content.innerHTML = `
+    sheet.innerHTML = `
+      <div class="sheet-handle"></div>
       <h2>Share & Collaborate</h2>
       <p>Create a shared list or join one with a code.</p>
       <input type="text" id="sharedListName" placeholder="New list name (e.g. Household)" />
-      <button class="auth-btn google" style="margin-bottom:14px" onclick="window.createSharedList()">Create Shared List</button>
-      <div style="text-align:center;color:var(--text-muted);font-size:0.82rem;margin-bottom:10px">— or join existing —</div>
+      <button class="btn-login google" style="margin-bottom:14px;font-family:inherit" onclick="window.createSharedList()">Create Shared List</button>
+      <div style="text-align:center;color:var(--text-dim);font-size:0.8rem;margin-bottom:10px">— or join existing —</div>
       <input type="text" id="joinCodeInput" placeholder="Enter invite code" style="text-transform:uppercase" />
-      <div class="modal-actions">
-        <button class="btn-secondary" onclick="window.closeShareModal()">Cancel</button>
-        <button class="btn-primary" onclick="window.joinSharedList(document.getElementById('joinCodeInput').value)">Join</button>
+      <div class="sheet-actions">
+        <button class="btn-sec" onclick="window.closeShareModal()">Cancel</button>
+        <button class="btn-pri" onclick="window.joinSharedList(document.getElementById('joinCodeInput').value)">Join</button>
       </div>`;
   }
   modal.classList.add('open');
@@ -540,7 +440,7 @@ function copyShareLink() {
 function loadMembers(code) {
   get(ref(db, `sharedLists/${code}/members`)).then(snap => {
     const members = snap.val() || {};
-    const el = document.getElementById('sharedMembersContainer');
+    const el = document.getElementById('membersContainer');
     if (!el) return;
     let html = '<div class="shared-members">';
     Object.values(members).forEach(m => {
@@ -567,21 +467,13 @@ function startVoice() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) { toast("Voice not supported"); return; }
   const btn = document.getElementById('voiceBtn');
-
-  if (recognition) {
-    recognition.stop();
-    recognition = null;
-    btn.classList.remove('listening');
-    return;
-  }
-
+  if (recognition) { recognition.stop(); recognition = null; btn.classList.remove('listening'); return; }
   recognition = new SR();
   recognition.lang = 'en-US';
   recognition.continuous = false;
   recognition.interimResults = false;
   btn.classList.add('listening');
   haptic('medium');
-
   recognition.onresult = e => {
     const text = e.results[0][0].transcript;
     document.getElementById('itemInput').value = text;
@@ -589,258 +481,195 @@ function startVoice() {
     recognition = null;
     haptic('success');
     toast(`Heard: "${text}"`);
-    autoFillCategory();
+    showAutocomplete(text);
   };
-
   recognition.onerror = () => { btn.classList.remove('listening'); recognition = null; toast("Couldn't hear that"); };
   recognition.onend = () => { btn.classList.remove('listening'); recognition = null; };
   recognition.start();
 }
 
-// ── Search ──
-function handleSearch(e) {
-  searchQuery = e.target.value.toLowerCase();
-  renderSuggestions();
+// ── Autocomplete (Hick's Law — max 5 suggestions) ──
+function showAutocomplete(query) {
+  const el = document.getElementById('autocomplete');
+  if (!query || query.length < 2) { el.classList.add('hidden'); return; }
+
+  const lower = query.toLowerCase();
+  const activeNames = new Set(activeList.map(i => i.name.toLowerCase()));
+
+  let matches = Object.entries(suggestionDB)
+    .map(([name, data]) => ({ name, ...data }))
+    .filter(i => !activeNames.has(i.name.toLowerCase()) && i.name.toLowerCase().includes(lower))
+    .sort((a, b) => {
+      const aStarts = a.name.toLowerCase().startsWith(lower) ? 1 : 0;
+      const bStarts = b.name.toLowerCase().startsWith(lower) ? 1 : 0;
+      if (bStarts !== aStarts) return bStarts - aStarts;
+      return (b.count || 0) - (a.count || 0);
+    })
+    .slice(0, 5);
+
+  if (matches.length === 0) { el.classList.add('hidden'); return; }
+
+  el.innerHTML = matches.map(item => {
+    const cat = itemCategory(item);
+    const info = CATEGORIES[cat] || CATEGORIES['Other'];
+    return `<div class="ac-item" data-name="${esc(item.name)}">
+      <span class="ac-emoji">${info.emoji}</span>
+      <span class="ac-name">${esc(item.name)}</span>
+      <span class="ac-cat">${esc(cat)}</span>
+      <span class="ac-add">+</span>
+    </div>`;
+  }).join('');
+
+  el.classList.remove('hidden');
+
+  el.querySelectorAll('.ac-item').forEach(item => {
+    item.addEventListener('click', () => {
+      addItem(item.dataset.name, 1);
+      document.getElementById('itemInput').value = '';
+      el.classList.add('hidden');
+      document.getElementById('itemInput').focus();
+    });
+  });
 }
 
-// ── Collapsible suggestions ──
-function toggleSuggestions() {
-  suggestionsCollapsed = !suggestionsCollapsed;
-  const content = document.getElementById('suggestionsContent');
-  const toggle = document.getElementById('suggestionsToggle');
-  if (suggestionsCollapsed) {
-    content.classList.add('collapsed');
-    toggle.classList.add('collapsed');
-  } else {
-    content.classList.remove('collapsed');
-    toggle.classList.remove('collapsed');
+// ── Celebration (Peak-End Rule) ──
+function celebrate() {
+  const el = document.getElementById('celebration');
+  el.classList.remove('hidden');
+  const colors = ['#ff3b30', '#ff9500', '#ffcc00', '#34c759', '#007aff', '#af52de'];
+  let html = '';
+  for (let i = 0; i < 40; i++) {
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    const left = Math.random() * 100;
+    const delay = Math.random() * 0.6;
+    const size = 4 + Math.random() * 8;
+    html += `<div class="confetti" style="left:${left}%;top:-10px;width:${size}px;height:${size}px;background:${color};animation-delay:${delay}s"></div>`;
   }
-  localStorage.setItem('suggestionsCollapsed', suggestionsCollapsed);
-  haptic('light');
-}
-
-// ── Swipe to delete ──
-function initSwipe(container) {
-  let startX, currentX, swiping = false, target = null;
-  const threshold = 80;
-
-  container.addEventListener('touchstart', e => {
-    const item = e.target.closest('.active-item');
-    if (!item || e.target.closest('.check-box') || e.target.closest('.delete-btn')) return;
-    startX = e.touches[0].clientX;
-    target = item;
-    swiping = false;
-  }, { passive: true });
-
-  container.addEventListener('touchmove', e => {
-    if (!target) return;
-    currentX = e.touches[0].clientX;
-    const dx = startX - currentX;
-    if (dx > 10) {
-      swiping = true;
-      const content = target.querySelector('.item-content');
-      if (content) {
-        content.style.transform = `translateX(${Math.max(-threshold, -dx)}px)`;
-        target.classList.toggle('swiping', dx > 30);
-      }
-    }
-  }, { passive: true });
-
-  container.addEventListener('touchend', () => {
-    if (!target) return;
-    const content = target.querySelector('.item-content');
-    if (swiping && startX - currentX > threshold) {
-      const id = target.dataset.id;
-      if (id) removeItem(id);
-    } else if (content) {
-      content.style.transform = '';
-      target.classList.remove('swiping');
-    }
-    target = null;
-    swiping = false;
-  }, { passive: true });
-}
-
-// ── Long-press to delete ──
-function initLongPress(container) {
-  let timer = null;
-  let pressTarget = null;
-
-  container.addEventListener('touchstart', e => {
-    const item = e.target.closest('.active-item');
-    if (!item || e.target.closest('.check-box') || e.target.closest('.delete-btn')) return;
-    pressTarget = item;
-    timer = setTimeout(() => {
-      haptic('heavy');
-      pressTarget.classList.add('press-hold');
-      const id = pressTarget.dataset.id;
-      const name = pressTarget.querySelector('.item-text')?.textContent || 'this item';
-      if (id && confirm(`Delete "${name}"?`)) {
-        removeItem(id);
-      } else {
-        pressTarget.classList.remove('press-hold');
-      }
-      pressTarget = null;
-    }, 600);
-  }, { passive: true });
-
-  const cancel = () => {
-    clearTimeout(timer);
-    if (pressTarget) pressTarget.classList.remove('press-hold');
-    pressTarget = null;
-  };
-
-  container.addEventListener('touchmove', cancel, { passive: true });
-  container.addEventListener('touchend', cancel, { passive: true });
+  el.innerHTML = html;
+  setTimeout(() => { el.classList.add('hidden'); el.innerHTML = ''; }, 2000);
 }
 
 // ── Rendering ──
-function renderQuickAdd() {
-  const container = document.getElementById('quickAddRow');
-  if (!container) return;
-  const activeNames = new Set(activeList.map(i => i.name.toLowerCase()));
+function render() {
+  const area = document.getElementById('listArea');
+  const progressWrap = document.getElementById('progressWrap');
 
-  let candidates = Object.entries(suggestionDB)
-    .map(([name, data]) => ({ name, ...data }))
-    .filter(i => !activeNames.has(i.name.toLowerCase()));
+  const unchecked = activeList.filter(i => !i.checked);
+  const checked = activeList.filter(i => i.checked);
+  const total = activeList.length;
+  const checkedCount = checked.length;
 
-  candidates.sort((a, b) => {
-    if (b.count !== a.count) return b.count - a.count;
-    return (b.lastUsed || 0) - (a.lastUsed || 0);
-  });
+  // Progress bar (Goal-Gradient Effect)
+  if (total > 0) {
+    progressWrap.classList.remove('hidden');
+    const pct = Math.round((checkedCount / total) * 100);
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('progressText').textContent = `${checkedCount} of ${total}`;
 
-  const top = candidates.slice(0, 12);
-  if (top.length === 0) { container.innerHTML = ''; return; }
+    if (checkedCount === total && total > 0) {
+      celebrate();
+    }
+  } else {
+    progressWrap.classList.add('hidden');
+  }
 
-  container.innerHTML = top.map(item => {
-    const cat = itemCategory(item);
-    const info = CATEGORIES[cat] || CATEGORIES['Other'];
-    return `<button class="quick-pill" onclick="window._addSuggestion('${jsesc(item.name)}', '${jsesc(cat)}')">${info.emoji} ${esc(item.name)}</button>`;
-  }).join('');
-}
-
-function renderActiveList() {
-  const container = document.getElementById('activeListContainer');
-  const countEl = document.getElementById('listCount');
-
-  if (activeList.length === 0) {
-    if (countEl) countEl.textContent = '';
-    container.innerHTML = `
+  // Empty state
+  if (total === 0) {
+    area.innerHTML = `
       <div class="empty-state">
-        <div class="empty-icon">🛒</div>
-        <div>Your list is empty.<br>Tap a suggestion or add items above.</div>
-      </div>`;
+        <div class="empty-emoji">🛒</div>
+        <div class="empty-title">What do you need?</div>
+        <div class="empty-sub">Type below to start your list. We'll organize everything for you.</div>
+      </div>
+      ${renderSuggestions()}`;
     return;
   }
 
-  const checked = activeList.filter(i => i.checked).length;
-  const total = activeList.length;
-  if (countEl) countEl.textContent = `${checked}/${total}`;
-
+  // Group unchecked items by category
   const byCat = {};
-  activeList.forEach(item => {
+  unchecked.forEach(item => {
     const cat = itemCategory(item);
     if (!byCat[cat]) byCat[cat] = [];
     byCat[cat].push(item);
   });
 
   let html = '';
-  CATEGORY_ORDER.forEach(cat => {
+
+  // Unchecked items grouped by category
+  CAT_ORDER.forEach(cat => {
     if (!byCat[cat]) return;
     const info = CATEGORIES[cat];
-    const items = byCat[cat];
-    html += `
-      <div class="cat-group">
-        <div class="cat-group-header">
-          <span class="cat-group-emoji">${info.emoji}</span>
-          <span class="cat-group-name">${esc(cat)}</span>
-        </div>
-        <div class="items-grid">`;
-
-    items.forEach(item => {
-      const checked = item.checked ? 'checked' : '';
-      const qty = item.qty && item.qty > 1 ? `<span class="item-qty">×${item.qty}</span>` : '';
-      html += `
-        <div class="item active-item ${checked} adding" data-id="${item.id}">
-          <div class="swipe-bg">🗑️</div>
-          <div class="item-content">
-            <div class="check-box ${item.checked ? 'is-checked' : ''}" onclick="window._toggle('${item.id}', ${item.checked})">
-              <svg viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6.5L5 9.5L10 3"/></svg>
-            </div>
-            <span class="item-text">${esc(item.name)}</span>
-            ${qty}
-            <button class="delete-btn" onclick="window._remove('${item.id}')">✕</button>
-          </div>
-        </div>`;
-    });
-    html += '</div></div>';
+    html += `<div class="cat-section">
+      <div class="cat-header">
+        <span class="cat-emoji">${info.emoji}</span>
+        <span class="cat-label">${esc(cat)}</span>
+      </div>`;
+    byCat[cat].forEach(item => { html += renderItem(item); });
+    html += '</div>';
   });
 
-  container.innerHTML = html;
-  initSwipe(container);
-  initLongPress(container);
+  // "Got it" section for checked items
+  if (checked.length > 0) {
+    html += `<div class="done-section">
+      <div class="done-header" onclick="window._toggleDone()">
+        <span class="done-label">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" class="${doneCollapsed ? 'collapsed' : ''}"><polyline points="6 9 12 15 18 9"/></svg>
+          Got it <span class="done-count">${checked.length}</span>
+        </span>
+        <button class="done-clear" onclick="event.stopPropagation(); window.clearChecked()">Clear all</button>
+      </div>
+      <div class="done-items ${doneCollapsed ? 'collapsed' : ''}" style="max-height:${doneCollapsed ? '0' : checked.length * 60 + 'px'}">`;
+    checked.forEach(item => { html += renderItem(item); });
+    html += '</div></div>';
+  }
+
+  // Suggestions
+  html += renderSuggestions();
+
+  area.innerHTML = html;
+  initGestures(area);
+}
+
+function renderItem(item) {
+  const isChecked = item.checked;
+  const qty = item.qty && item.qty > 1 ? `<span class="item-qty">x${item.qty}</span>` : '';
+  return `<div class="list-item ${isChecked ? 'is-checked' : ''} adding" data-id="${item.id}">
+    <div class="item-swipe-bg">Delete</div>
+    <div class="item-inner">
+      <div class="item-check ${isChecked ? 'checked' : ''}" onclick="window._toggle('${item.id}', ${isChecked})">
+        <svg viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6.5L5 9.5L10 3"/></svg>
+      </div>
+      <span class="item-name">${esc(item.name)}</span>
+      ${qty}
+    </div>
+  </div>`;
 }
 
 function renderSuggestions() {
-  const container = document.getElementById('suggestionsInner');
-  const countEl = document.getElementById('suggestionsCountBadge');
   const activeNames = new Set(activeList.map(i => i.name.toLowerCase()));
+  let candidates = Object.entries(suggestionDB)
+    .map(([name, data]) => ({ name, ...data }))
+    .filter(i => !activeNames.has(i.name.toLowerCase()))
+    .sort((a, b) => (b.count || 0) - (a.count || 0))
+    .slice(0, 30);
 
-  let candidates = Object.entries(suggestionDB).map(([name, data]) => ({ name, ...data }));
-  candidates = candidates.filter(i => !activeNames.has(i.name.toLowerCase()));
+  if (candidates.length === 0) return '';
 
-  if (searchQuery) {
-    candidates = candidates.filter(i =>
-      i.name.toLowerCase().includes(searchQuery) ||
-      itemCategory(i).toLowerCase().includes(searchQuery)
-    );
-  }
-
-  candidates.sort((a, b) => {
-    if (b.count !== a.count) return b.count - a.count;
-    return (b.lastUsed || 0) - (a.lastUsed || 0);
-  });
-
-  const top = candidates.slice(0, 80);
-
-  if (countEl) countEl.textContent = top.length;
-
-  if (top.length === 0) {
-    container.innerHTML = searchQuery
-      ? `<div class="empty-state"><div class="empty-icon">🔍</div><div>No matches for "${esc(searchQuery)}"</div></div>`
-      : `<div class="empty-state"><div class="empty-icon">💡</div><div>Add items to build your suggestions.</div></div>`;
-    return;
-  }
-
-  const byCat = {};
-  top.forEach(item => {
+  const chips = candidates.map(item => {
     const cat = itemCategory(item);
-    if (!byCat[cat]) byCat[cat] = [];
-    byCat[cat].push(item);
-  });
+    const info = CATEGORIES[cat] || CATEGORIES['Other'];
+    return `<button class="sug-chip" onclick="window._addSug('${item.name.replace(/'/g, "\\'")}')">${info.emoji} ${esc(item.name)} <span class="plus">+</span></button>`;
+  }).join('');
 
-  let html = '';
-  CATEGORY_ORDER.forEach(cat => {
-    if (!byCat[cat]) return;
-    const info = CATEGORIES[cat];
-    const items = byCat[cat];
-    html += `
-      <div class="sug-section">
-        <div class="sug-header">
-          <span class="sug-emoji">${info.emoji}</span>
-          <span class="sug-cat-name">${esc(cat)}</span>
-          <span class="sug-count">${items.length}</span>
-        </div>
-        <div class="sug-items">`;
-
-    items.forEach(item => {
-      const c = itemCategory(item);
-      html += `<button class="sug-pill" onclick="window._addSuggestion('${jsesc(item.name)}', '${jsesc(c)}')">${esc(item.name)}<span class="sug-plus">+</span></button>`;
-    });
-    html += '</div></div>';
-  });
-
-  container.innerHTML = html;
+  return `<div class="suggestions-section">
+    <div class="sug-title">
+      <span>Suggestions</span>
+      <button class="sug-toggle ${sugCollapsed ? 'collapsed' : ''}" onclick="window._toggleSug()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+    </div>
+    <div class="sug-grid ${sugCollapsed ? 'collapsed' : ''}">${chips}</div>
+  </div>`;
 }
 
 function renderListTabs() {
@@ -856,6 +685,48 @@ function renderListTabs() {
     shareBtn.style.display = activeListId !== 'personal' ? 'flex' : 'none';
     shareBtn.onclick = () => openShareModal(activeListId);
   }
+}
+
+// ── Gestures (Jakob's Law — familiar patterns) ──
+function initGestures(container) {
+  let startX, currentX, swiping = false, target = null;
+  const threshold = 80;
+
+  container.addEventListener('touchstart', e => {
+    const item = e.target.closest('.list-item');
+    if (!item || e.target.closest('.item-check') || e.target.closest('.done-clear')) return;
+    startX = e.touches[0].clientX;
+    target = item;
+    swiping = false;
+  }, { passive: true });
+
+  container.addEventListener('touchmove', e => {
+    if (!target) return;
+    currentX = e.touches[0].clientX;
+    const dx = startX - currentX;
+    if (dx > 10) {
+      swiping = true;
+      const inner = target.querySelector('.item-inner');
+      if (inner) {
+        inner.style.transform = `translateX(${Math.max(-threshold, -dx)}px)`;
+        target.classList.toggle('swiping', dx > 30);
+      }
+    }
+  }, { passive: true });
+
+  container.addEventListener('touchend', () => {
+    if (!target) return;
+    const inner = target.querySelector('.item-inner');
+    if (swiping && startX - currentX > threshold) {
+      const id = target.dataset.id;
+      if (id) removeItem(id);
+    } else if (inner) {
+      inner.style.transform = '';
+      target.classList.remove('swiping');
+    }
+    target = null;
+    swiping = false;
+  }, { passive: true });
 }
 
 // ── PWA install ──
@@ -890,13 +761,22 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./sw.js').catch(console.error);
 }
 
-suggestionsCollapsed = localStorage.getItem('suggestionsCollapsed') === 'true';
-
+// Window bindings
 window._toggle = toggleItem;
-window._remove = removeItem;
-window._addSuggestion = (name, category) => { addItem(name, category, 1); scrollTo({ top: 0, behavior: 'smooth' }); };
+window._addSug = (name) => { addItem(name, 1); };
 window._switchList = switchToList;
-window._pickCategory = pickCategory;
+window._toggleDone = () => {
+  doneCollapsed = !doneCollapsed;
+  localStorage.setItem('doneCollapsed', doneCollapsed);
+  render();
+  haptic('light');
+};
+window._toggleSug = () => {
+  sugCollapsed = !sugCollapsed;
+  localStorage.setItem('sugCollapsed', sugCollapsed);
+  render();
+  haptic('light');
+};
 window.login = login;
 window.logout = logout;
 window.togglePhoneLogin = togglePhoneLogin;
@@ -913,54 +793,40 @@ window.copyShareLink = copyShareLink;
 window.installApp = installApp;
 window.dismissInstall = dismissInstall;
 window.clearChecked = clearChecked;
-window.clearAll = clearAll;
-window.openCategoryPicker = openCategoryPicker;
-window.closeCategoryPicker = closeCategoryPicker;
-window.toggleSuggestions = toggleSuggestions;
 
 document.addEventListener('DOMContentLoaded', () => {
-  const form = document.getElementById('addForm');
-  const itemInput = document.getElementById('itemInput');
-  const qtyInput = document.getElementById('qtyInput');
-  const searchInput = document.getElementById('searchInput');
-  const suggestionsToggle = document.getElementById('suggestionsToggle');
-  const suggestionsContent = document.getElementById('suggestionsContent');
+  const input = document.getElementById('itemInput');
+  const addBtn = document.getElementById('addBtn');
+  const acEl = document.getElementById('autocomplete');
 
-  if (form) {
-    form.addEventListener('submit', e => {
-      e.preventDefault();
-      const cat = selectedCategory || autoCategory(itemInput.value);
-      addItem(itemInput.value, cat, qtyInput.value);
-      itemInput.value = '';
-      qtyInput.value = '1';
-      selectedCategory = '';
-      updateCategoryButton();
-      itemInput.focus();
-    });
-  }
+  // Add item on button click or Enter key
+  const doAdd = () => {
+    const val = input.value.trim();
+    if (!val) return;
+    addItem(val, 1);
+    input.value = '';
+    acEl.classList.add('hidden');
+    input.focus();
+  };
 
-  if (itemInput) {
-    let debounce;
-    itemInput.addEventListener('input', () => {
-      clearTimeout(debounce);
-      debounce = setTimeout(autoFillCategory, 300);
-    });
-  }
+  addBtn.addEventListener('click', doAdd);
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); doAdd(); }
+  });
 
-  if (searchInput) searchInput.addEventListener('input', handleSearch);
+  // Autocomplete as you type (Postel's Law — accept flexible input)
+  let debounce;
+  input.addEventListener('input', () => {
+    clearTimeout(debounce);
+    debounce = setTimeout(() => showAutocomplete(input.value.trim()), 150);
+  });
 
-  if (suggestionsCollapsed && suggestionsToggle && suggestionsContent) {
-    suggestionsContent.classList.add('collapsed');
-    suggestionsToggle.classList.add('collapsed');
-  }
+  // Hide autocomplete on outside tap
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.autocomplete-wrap')) acEl.classList.add('hidden');
+  });
 
-  const catSheet = document.getElementById('categorySheet');
-  if (catSheet) {
-    catSheet.addEventListener('click', e => {
-      if (e.target === catSheet) closeCategoryPicker();
-    });
-  }
-
+  // Pull-to-refresh for standalone PWA
   if (window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches) {
     let pullStartY = 0, pulling = false;
     const indicator = document.getElementById('pullIndicator');

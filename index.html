@@ -19,138 +19,104 @@
 
   <!-- Login -->
   <div id="loginOverlay">
-    <div class="login-box">
+    <div class="login-card">
+      <div class="login-icon">🛒</div>
       <h1>Shopping List</h1>
-      <p>Sign in to sync your items across devices.</p>
-      <div id="mainLoginOptions" class="login-options">
-        <button class="auth-btn google" onclick="login()">
+      <p>Sign in to sync across devices</p>
+      <div id="mainLoginOptions" class="login-actions">
+        <button class="btn-login google" onclick="login()">
           <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#fff" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#fff" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.836.86-3.048.86-2.344 0-4.328-1.584-5.036-3.715H.957v2.332A8.997 8.997 0 0 0 9 18z" opacity=".3"/><path fill="#fff" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" opacity=".5"/><path fill="#fff" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.159 6.656 3.58 9 3.58z" opacity=".3"/></svg>
-          Sign in with Google
+          Continue with Google
         </button>
-        <button class="auth-btn phone" onclick="togglePhoneLogin()">📱 Sign in with Phone</button>
+        <button class="btn-login phone" onclick="togglePhoneLogin()">Continue with Phone</button>
       </div>
       <div id="phoneFlow" class="phone-flow">
-        <p style="font-size:0.88rem;color:var(--text-secondary)">Enter phone number (e.g. +15551234567)</p>
+        <p class="phone-hint">Enter phone number (e.g. +15551234567)</p>
         <input type="tel" id="phoneInput" placeholder="+1..." />
         <div id="recaptcha-container"></div>
-        <button id="sendCodeBtn" class="auth-btn google" onclick="sendCode()">Send SMS Code</button>
-        <div id="otpGroup" class="hidden" style="display:flex;flex-direction:column;gap:10px">
-          <input type="text" id="otpInput" placeholder="Enter 6-digit code" style="text-align:center;letter-spacing:3px" />
-          <button class="auth-btn google" onclick="verifyCode()">Verify & Sign In</button>
+        <button id="sendCodeBtn" class="btn-login google" onclick="sendCode()">Send SMS Code</button>
+        <div id="otpGroup" class="hidden">
+          <input type="text" id="otpInput" placeholder="Enter 6-digit code" />
+          <button class="btn-login google" onclick="verifyCode()">Verify & Sign In</button>
         </div>
-        <button class="secondary-btn" onclick="cancelPhoneLogin()">Cancel</button>
+        <button class="btn-text" onclick="cancelPhoneLogin()">Cancel</button>
       </div>
     </div>
   </div>
 
-  <!-- Top bar -->
-  <div id="topBar" class="top-bar hidden">
-    <div id="userDisplay" class="user-info"></div>
-    <div class="top-bar-actions">
-      <button class="icon-btn" onclick="openShareModal()" title="Share">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-      </button>
-      <button id="shareActiveBtn" class="icon-btn" style="display:none" title="Invite">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
-      </button>
-      <button class="icon-btn" onclick="toggleDarkMode()" title="Dark mode">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-      </button>
-      <button class="logout-btn" onclick="logout()">Sign Out</button>
-    </div>
-  </div>
-
-  <!-- App -->
+  <!-- Main app shell -->
   <div id="app" class="hidden">
+
+    <!-- Top bar -->
+    <header id="topBar" class="top-bar">
+      <div id="userDisplay" class="user-display"></div>
+      <div class="top-actions">
+        <button class="top-icon-btn" onclick="openShareModal()" aria-label="Share">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        </button>
+        <button id="shareActiveBtn" class="top-icon-btn" style="display:none" aria-label="Invite">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+        </button>
+        <button class="top-icon-btn" onclick="toggleDarkMode()" aria-label="Dark mode">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+        <button class="top-icon-btn signout" onclick="logout()" aria-label="Sign out">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- List tabs -->
+    <div id="listTabs" class="list-tabs"></div>
 
     <!-- Install banner -->
     <div id="installBanner" class="install-banner" onclick="installApp()">
-      <div>
-        <div class="install-text">Install Shopping List</div>
-        <div class="install-sub">Add to home screen for the best experience</div>
+      <span>📲 Add to home screen for the best experience</span>
+      <button class="install-x" onclick="event.stopPropagation(); dismissInstall()">✕</button>
+    </div>
+
+    <!-- Progress bar -->
+    <div id="progressWrap" class="progress-wrap hidden">
+      <div class="progress-bar">
+        <div id="progressFill" class="progress-fill"></div>
       </div>
-      <button class="install-dismiss" onclick="event.stopPropagation(); dismissInstall()">✕</button>
+      <span id="progressText" class="progress-text"></span>
     </div>
 
-    <!-- List tabs -->
-    <div id="listTabs" class="list-mode-bar"></div>
+    <!-- Main list area -->
+    <div id="listArea" class="list-area"></div>
 
-    <!-- Sticky add section -->
-    <div class="add-section">
-      <form id="addForm" class="add-form">
-        <div class="add-row">
-          <input type="text" id="itemInput" name="item" placeholder="Add an item..." required autocomplete="off" />
-          <input type="number" id="qtyInput" name="qty" value="1" min="1" max="99" />
-          <button type="submit" class="submit-btn">Add</button>
+    <!-- Bottom input bar -->
+    <div class="input-bar">
+      <div class="input-bar-inner">
+        <div class="autocomplete-wrap">
+          <input type="text" id="itemInput" placeholder="Add an item..." autocomplete="off" enterkeyhint="done" />
+          <div id="autocomplete" class="autocomplete-list hidden"></div>
         </div>
-        <div class="add-row-bottom">
-          <button type="button" id="catPickerBtn" class="cat-picker-btn" onclick="openCategoryPicker()">
-            Category <span class="chevron">▼</span>
-          </button>
-          <button type="button" id="voiceBtn" class="voice-btn" onclick="startVoice()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-          </button>
-        </div>
-      </form>
-    </div>
-
-    <!-- Quick add pills -->
-    <div id="quickAddRow" class="quick-add-row"></div>
-
-    <!-- Active list -->
-    <div class="list-header">
-      <span>Your List</span>
-      <span id="listCount" class="list-count"></span>
-    </div>
-    <div id="activeListContainer" class="active-list"></div>
-
-    <!-- Actions -->
-    <div class="actions">
-      <button onclick="clearChecked()">Clear Checked</button>
-      <button class="danger" onclick="clearAll()">Reset</button>
-    </div>
-
-    <!-- Suggestions -->
-    <div class="suggestions-header">
-      <button id="suggestionsToggle" class="suggestions-toggle" onclick="toggleSuggestions()">
-        <svg class="toggle-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-        All Suggestions
-      </button>
-      <span id="suggestionsCountBadge" class="suggestions-count">0</span>
-    </div>
-
-    <div id="suggestionsContent">
-      <div class="search-bar">
-        <span class="search-icon">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        </span>
-        <input type="text" id="searchInput" placeholder="Search..." />
+        <button id="voiceBtn" class="voice-btn" onclick="startVoice()" aria-label="Voice input">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+        </button>
+        <button id="addBtn" class="add-btn" aria-label="Add item">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
       </div>
-      <div id="suggestionsInner"></div>
     </div>
 
-    <div class="footer">Shopping List v3.1</div>
-  </div>
-
-  <!-- Category picker bottom sheet -->
-  <div id="categorySheet" class="bottom-sheet-overlay" onclick="if(event.target===this)closeCategoryPicker()">
-    <div class="bottom-sheet">
-      <div class="bottom-sheet-handle"></div>
-      <h3>Pick a Category</h3>
-      <div id="catGridContainer"></div>
-    </div>
   </div>
 
   <!-- Share modal -->
-  <div id="shareModal" class="modal-overlay" onclick="if(event.target===this)closeShareModal()">
-    <div class="modal" id="shareModalContent"></div>
+  <div id="shareModal" class="sheet-overlay" onclick="if(event.target===this)closeShareModal()">
+    <div class="sheet" id="shareSheet"></div>
   </div>
 
-  <!-- Pull-to-refresh indicator -->
+  <!-- Pull-to-refresh -->
   <div id="pullIndicator" class="pull-indicator"><span class="pull-arrow">↓</span></div>
 
   <!-- Toast -->
   <div id="toast" class="toast"></div>
+
+  <!-- Completion celebration -->
+  <div id="celebration" class="celebration hidden"></div>
 
   <script type="module" src="js/app.js"></script>
 </body>
