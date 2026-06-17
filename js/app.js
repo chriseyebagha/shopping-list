@@ -883,4 +883,41 @@ document.addEventListener('DOMContentLoaded', () => {
       if (e.target === storeSheet) closeStorePicker();
     });
   }
+
+  // Pull-to-refresh for standalone PWA
+  if (window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches) {
+    let pullStartY = 0, pulling = false;
+    const indicator = document.getElementById('pullIndicator');
+    document.addEventListener('touchstart', e => {
+      if (window.scrollY === 0 && e.touches.length === 1) {
+        pullStartY = e.touches[0].clientY;
+        pulling = true;
+      }
+    }, { passive: true });
+    document.addEventListener('touchmove', e => {
+      if (!pulling) return;
+      const dy = e.touches[0].clientY - pullStartY;
+      if (dy > 0 && dy < 150 && window.scrollY === 0) {
+        const progress = Math.min(dy / 80, 1);
+        indicator.style.transform = `translateX(-50%) translateY(${dy * 0.5}px)`;
+        indicator.style.opacity = progress;
+        indicator.querySelector('.pull-arrow').style.transform = `rotate(${progress * 180}deg)`;
+      }
+    }, { passive: true });
+    document.addEventListener('touchend', () => {
+      if (!pulling) return;
+      pulling = false;
+      const opacity = parseFloat(indicator.style.opacity || 0);
+      if (opacity >= 1) {
+        indicator.querySelector('.pull-arrow').textContent = '↻';
+        indicator.style.transition = 'opacity 0.3s';
+        setTimeout(() => location.reload(), 300);
+      } else {
+        indicator.style.transition = 'transform 0.2s, opacity 0.2s';
+        indicator.style.transform = 'translateX(-50%) translateY(0)';
+        indicator.style.opacity = 0;
+        setTimeout(() => { indicator.style.transition = ''; }, 200);
+      }
+    });
+  }
 });
