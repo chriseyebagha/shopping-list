@@ -2,7 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebas
 import { getDatabase, ref, set, push, onValue, remove, update, off, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, RecaptchaVerifier, signInWithPhoneNumber } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-// ── Firebase config ──
+// ── Firebase ──
 const firebaseConfig = {
   apiKey: "AIzaSyBAnMbbd7hbQvx8mdNF5PajAdxl_VYOsxE",
   authDomain: "chris-shopping-list.firebaseapp.com",
@@ -24,9 +24,11 @@ let listRef, suggestionsRef, iconsRef;
 let currentUser = null;
 let activeList = [];
 let suggestionDB = {};
-let activeListId = 'personal'; // 'personal' or a shared list code
+let activeListId = 'personal';
 let sharedLists = {};
 let searchQuery = '';
+let selectedStore = '';
+let suggestionsCollapsed = false;
 
 const STORE_ORDER = ["Trader Joe's", "Whole Foods", "Costco", "Safeway", "Target", "TJ Maxx", "Amazon", "IKEA", "General"];
 
@@ -92,6 +94,14 @@ const getStoreRank = s => { const i = STORE_ORDER.indexOf(s); return i === -1 ? 
 const getStoreIcon = s => STORE_ICONS[s] || { emoji: '🛍️', color: '#6b7280' };
 const esc = s => s.replace(/['"<>&]/g, c => ({ "'": '&#39;', '"': '&quot;', '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]));
 
+function haptic(style) {
+  if (!navigator.vibrate) return;
+  if (style === 'light') navigator.vibrate(10);
+  else if (style === 'medium') navigator.vibrate(20);
+  else if (style === 'heavy') navigator.vibrate([30, 10, 30]);
+  else if (style === 'success') navigator.vibrate([10, 30, 10]);
+}
+
 function toast(msg) {
   const el = document.getElementById('toast');
   el.textContent = msg;
@@ -110,6 +120,7 @@ function initDarkMode() {
 function toggleDarkMode() {
   document.body.classList.toggle('dark');
   localStorage.setItem('darkMode', document.body.classList.contains('dark'));
+  haptic('light');
 }
 
 // ── Auth ──
@@ -124,7 +135,6 @@ function logout() {
   signOut(auth).then(() => location.reload()).catch(console.error);
 }
 
-// Phone auth
 let recaptchaVerifier = null;
 let confirmResult = null;
 
@@ -150,12 +160,11 @@ function sendCode() {
   signInWithPhoneNumber(auth, phone, recaptchaVerifier)
     .then(result => {
       confirmResult = result;
-      toast("Code sent! Check your phone.");
+      toast("Code sent!");
       document.getElementById('sendCodeBtn').classList.add('hidden');
       document.getElementById('otpGroup').classList.remove('hidden');
     })
     .catch(err => {
-      console.error("SMS Error", err);
       toast("Error: " + err.message);
       if (recaptchaVerifier) recaptchaVerifier.clear();
     });
@@ -171,19 +180,19 @@ function verifyCode() {
 onAuthStateChanged(auth, user => {
   const overlay = document.getElementById('loginOverlay');
   const topBar = document.getElementById('topBar');
-  const appContainer = document.getElementById('app');
+  const appEl = document.getElementById('app');
 
   if (user) {
     currentUser = user;
     overlay.style.display = 'none';
     topBar.classList.remove('hidden');
-    appContainer.classList.remove('hidden');
+    appEl.classList.remove('hidden');
 
-    const displayName = user.displayName ? user.displayName.split(' ')[0] : 'User';
-    const photoURL = user.photoURL || '';
-    document.getElementById('userDisplay').innerHTML = photoURL
-      ? `<img src="${photoURL}" class="user-avatar" alt="" /><span>${esc(displayName)}'s List</span>`
-      : `<span>${esc(displayName)}'s List</span>`;
+    const name = user.displayName ? user.displayName.split(' ')[0] : 'User';
+    const photo = user.photoURL || '';
+    document.getElementById('userDisplay').innerHTML = photo
+      ? `<img src="${photo}" class="user-avatar" alt="" /><span>${esc(name)}'s List</span>`
+      : `<span>${esc(name)}'s List</span>`;
 
     listRef = ref(db, `users/${user.uid}/shoppingList`);
     suggestionsRef = ref(db, `users/${user.uid}/suggestions`);
@@ -196,25 +205,21 @@ onAuthStateChanged(auth, user => {
     currentUser = null;
     overlay.style.display = 'flex';
     topBar.classList.add('hidden');
-    appContainer.classList.add('hidden');
+    appEl.classList.add('hidden');
   }
 });
 
 // ── Firebase listeners ──
 function setupListeners() {
   onValue(listRef, snap => {
-    const data = snap.val();
-    activeList = data ? Object.entries(data).map(([id, val]) => ({ id, ...val })) : [];
+    activeList = snap.val() ? Object.entries(snap.val()).map(([id, val]) => ({ id, ...val })) : [];
     renderActiveList();
   });
 
   onValue(suggestionsRef, snap => {
     const data = snap.val();
-    if (data) {
-      suggestionDB = data;
-    } else {
-      seedDatabase();
-    }
+    if (data) suggestionDB = data;
+    else seedDatabase();
     renderSuggestions();
   });
 
@@ -229,7 +234,7 @@ function setupListeners() {
 function seedDatabase() {
   const savedDB = localStorage.getItem('shoppingListSuggestionsDB');
   if (savedDB) {
-    try { update(suggestionsRef, JSON.parse(savedDB)); } catch (e) { console.error(e); }
+    try { update(suggestionsRef, JSON.parse(savedDB)); } catch (e) {}
   } else {
     const updates = {};
     SEED_DATA.forEach(item => {
@@ -256,50 +261,49 @@ function addItem(name, store, qty) {
   qty = Math.max(1, parseInt(qty) || 1);
 
   const exists = activeList.some(i => i.name.toLowerCase() === name.toLowerCase() && i.store === store);
-  if (exists) { toast(`"${name}" is already on your list`); return; }
+  if (exists) { toast(`"${name}" already on list`); haptic('heavy'); return; }
 
   const targetRef = activeListId === 'personal' ? listRef : ref(db, `sharedLists/${activeListId}/items`);
   push(targetRef, { name, store, qty, checked: false });
   updateStats(name, store);
+  haptic('success');
   toast(`Added ${name}`);
 }
 
 function updateStats(name, store) {
   const current = suggestionDB[name];
   const updates = {};
-  updates[name] = {
-    store,
-    count: current ? current.count + 1 : 1,
-    lastUsed: Date.now()
-  };
+  updates[name] = { store, count: current ? current.count + 1 : 1, lastUsed: Date.now() };
   update(suggestionsRef, updates);
 }
 
 function removeItem(id) {
   if (!currentUser) return;
+  haptic('medium');
   const el = document.querySelector(`[data-id="${id}"]`);
   if (el) {
     el.classList.add('removing');
     setTimeout(() => {
-      const basePath = activeListId === 'personal'
+      const path = activeListId === 'personal'
         ? `users/${currentUser.uid}/shoppingList/${id}`
         : `sharedLists/${activeListId}/items/${id}`;
-      remove(ref(db, basePath));
+      remove(ref(db, path));
     }, 280);
   } else {
-    const basePath = activeListId === 'personal'
+    const path = activeListId === 'personal'
       ? `users/${currentUser.uid}/shoppingList/${id}`
       : `sharedLists/${activeListId}/items/${id}`;
-    remove(ref(db, basePath));
+    remove(ref(db, path));
   }
 }
 
 function toggleItem(id, currentStatus) {
   if (!currentUser) return;
-  const basePath = activeListId === 'personal'
+  haptic('light');
+  const path = activeListId === 'personal'
     ? `users/${currentUser.uid}/shoppingList/${id}`
     : `sharedLists/${activeListId}/items/${id}`;
-  update(ref(db, basePath), { checked: !currentStatus });
+  update(ref(db, path), { checked: !currentStatus });
 }
 
 function clearChecked() {
@@ -313,16 +317,79 @@ function clearChecked() {
   });
   if (Object.keys(updates).length > 0) {
     update(ref(db), updates);
+    haptic('medium');
     toast("Cleared checked items");
   }
 }
 
 function clearAll() {
-  if (!currentUser) return;
-  if (!confirm('Delete ALL items from the list?')) return;
+  if (!currentUser || !confirm('Delete ALL items?')) return;
   const targetRef = activeListId === 'personal' ? listRef : ref(db, `sharedLists/${activeListId}/items`);
   set(targetRef, null);
+  haptic('heavy');
   toast("List cleared");
+}
+
+// ── Store picker bottom sheet ──
+function openStorePicker() {
+  const overlay = document.getElementById('storeSheet');
+  let html = '<div class="store-grid">';
+
+  STORE_ORDER.forEach(name => {
+    const icon = getStoreIcon(name);
+    const sel = selectedStore === name ? 'selected' : '';
+    html += `
+      <div class="store-grid-item ${sel}" onclick="window._pickStore('${esc(name).replace(/'/g, "\\'")}')">
+        <div class="sg-icon" style="background:${icon.color}">${icon.emoji}</div>
+        <div class="sg-name">${esc(name)}</div>
+      </div>`;
+  });
+
+  html += `
+    <div class="store-grid-item custom-store" onclick="window._pickCustomStore()">
+      <div class="sg-icon" style="background:var(--text-muted)">＋</div>
+      <div class="sg-name">New Store</div>
+    </div>`;
+  html += '</div>';
+
+  document.getElementById('storeGridContainer').innerHTML = html;
+  overlay.classList.add('open');
+  haptic('light');
+}
+
+function closeStorePicker() {
+  document.getElementById('storeSheet').classList.remove('open');
+}
+
+function pickStore(name) {
+  selectedStore = name;
+  updateStoreButton();
+  closeStorePicker();
+  haptic('light');
+}
+
+function pickCustomStore() {
+  const name = prompt('Enter store name:');
+  if (name && name.trim()) {
+    const trimmed = name.trim();
+    if (!STORE_ICONS[trimmed] && currentUser) {
+      update(iconsRef, { [trimmed]: { emoji: '🛍️', color: '#6b7280' } });
+    }
+    selectedStore = trimmed;
+    updateStoreButton();
+    closeStorePicker();
+  }
+}
+
+function updateStoreButton() {
+  const btn = document.getElementById('storePickerBtn');
+  if (!btn) return;
+  if (selectedStore) {
+    const icon = getStoreIcon(selectedStore);
+    btn.innerHTML = `<span class="store-emoji">${icon.emoji}</span> ${esc(selectedStore)} <span class="chevron">▼</span>`;
+  } else {
+    btn.innerHTML = `Store... <span class="chevron">▼</span>`;
+  }
 }
 
 // ── Shared lists ──
@@ -332,8 +399,7 @@ function generateShareCode() {
 
 function loadSharedLists() {
   if (!currentUser) return;
-  const sharedRef = ref(db, `users/${currentUser.uid}/sharedLists`);
-  onValue(sharedRef, snap => {
+  onValue(ref(db, `users/${currentUser.uid}/sharedLists`), snap => {
     sharedLists = snap.val() || {};
     renderListTabs();
   });
@@ -343,22 +409,11 @@ function createSharedList() {
   if (!currentUser) return;
   const name = document.getElementById('sharedListName').value.trim();
   if (!name) { toast("Enter a list name"); return; }
-
   const code = generateShareCode();
   const updates = {};
-  updates[`sharedLists/${code}/meta`] = {
-    name,
-    owner: currentUser.uid,
-    ownerName: currentUser.displayName || 'User',
-    createdAt: Date.now()
-  };
-  updates[`sharedLists/${code}/members/${currentUser.uid}`] = {
-    name: currentUser.displayName || 'User',
-    photo: currentUser.photoURL || '',
-    joinedAt: Date.now()
-  };
+  updates[`sharedLists/${code}/meta`] = { name, owner: currentUser.uid, ownerName: currentUser.displayName || 'User', createdAt: Date.now() };
+  updates[`sharedLists/${code}/members/${currentUser.uid}`] = { name: currentUser.displayName || 'User', photo: currentUser.photoURL || '', joinedAt: Date.now() };
   updates[`users/${currentUser.uid}/sharedLists/${code}`] = { name, role: 'owner' };
-
   update(ref(db), updates).then(() => {
     toast("Shared list created!");
     switchToList(code);
@@ -374,11 +429,7 @@ function joinSharedList(code) {
     if (!snap.exists()) { toast("List not found"); return; }
     const meta = snap.val();
     const updates = {};
-    updates[`sharedLists/${code}/members/${currentUser.uid}`] = {
-      name: currentUser.displayName || 'User',
-      photo: currentUser.photoURL || '',
-      joinedAt: Date.now()
-    };
+    updates[`sharedLists/${code}/members/${currentUser.uid}`] = { name: currentUser.displayName || 'User', photo: currentUser.photoURL || '', joinedAt: Date.now() };
     updates[`users/${currentUser.uid}/sharedLists/${code}`] = { name: meta.name, role: 'member' };
     update(ref(db), updates).then(() => {
       toast(`Joined "${meta.name}"!`);
@@ -389,27 +440,18 @@ function joinSharedList(code) {
 }
 
 function switchToList(listId) {
-  if (activeListId !== 'personal') {
-    off(ref(db, `sharedLists/${activeListId}/items`));
-  } else {
-    off(listRef);
-  }
+  if (activeListId !== 'personal') off(ref(db, `sharedLists/${activeListId}/items`));
+  else off(listRef);
 
   activeListId = listId;
   activeList = [];
   renderActiveList();
 
-  if (listId === 'personal') {
-    onValue(listRef, snap => {
-      activeList = snap.val() ? Object.entries(snap.val()).map(([id, val]) => ({ id, ...val })) : [];
-      renderActiveList();
-    });
-  } else {
-    onValue(ref(db, `sharedLists/${listId}/items`), snap => {
-      activeList = snap.val() ? Object.entries(snap.val()).map(([id, val]) => ({ id, ...val })) : [];
-      renderActiveList();
-    });
-  }
+  const target = listId === 'personal' ? listRef : ref(db, `sharedLists/${listId}/items`);
+  onValue(target, snap => {
+    activeList = snap.val() ? Object.entries(snap.val()).map(([id, val]) => ({ id, ...val })) : [];
+    renderActiveList();
+  });
   renderListTabs();
 }
 
@@ -425,62 +467,53 @@ function openShareModal(code) {
       <p>Send this link to invite others to collaborate in real-time.</p>
       <div class="share-link-box">
         <input type="text" value="${shareUrl}" readonly id="shareLinkInput" />
-        <button onclick="copyShareLink()">Copy</button>
+        <button onclick="window.copyShareLink()">Copy</button>
       </div>
       <div id="sharedMembersContainer"></div>
-      <div class="modal-actions">
-        <button class="btn-secondary" onclick="closeShareModal()">Done</button>
-      </div>
-    `;
+      <div class="modal-actions"><button class="btn-secondary" onclick="window.closeShareModal()">Done</button></div>`;
     loadMembers(code);
   } else {
     content.innerHTML = `
       <h2>Share & Collaborate</h2>
       <p>Create a shared list or join one with a code.</p>
       <input type="text" id="sharedListName" placeholder="New list name (e.g. Household)" />
-      <button class="auth-btn google" style="margin-bottom:16px" onclick="createSharedList()">Create Shared List</button>
-      <div style="text-align:center;color:var(--text-muted);font-size:0.82rem;margin-bottom:12px">— or join an existing list —</div>
+      <button class="auth-btn google" style="margin-bottom:16px" onclick="window.createSharedList()">Create Shared List</button>
+      <div style="text-align:center;color:var(--text-muted);font-size:0.85rem;margin-bottom:12px">— or join existing —</div>
       <input type="text" id="joinCodeInput" placeholder="Enter invite code (e.g. AB12CD)" style="text-transform:uppercase" />
       <div class="modal-actions">
-        <button class="btn-secondary" onclick="closeShareModal()">Cancel</button>
-        <button class="btn-primary" onclick="joinSharedList(document.getElementById('joinCodeInput').value)">Join</button>
-      </div>
-    `;
+        <button class="btn-secondary" onclick="window.closeShareModal()">Cancel</button>
+        <button class="btn-primary" onclick="window.joinSharedList(document.getElementById('joinCodeInput').value)">Join</button>
+      </div>`;
   }
   modal.classList.add('open');
 }
 
-function closeShareModal() {
-  document.getElementById('shareModal').classList.remove('open');
-}
+function closeShareModal() { document.getElementById('shareModal').classList.remove('open'); }
 
 function copyShareLink() {
-  const input = document.getElementById('shareLinkInput');
-  navigator.clipboard.writeText(input.value).then(() => toast("Link copied!"));
+  navigator.clipboard.writeText(document.getElementById('shareLinkInput').value).then(() => toast("Link copied!"));
 }
 
 function loadMembers(code) {
   get(ref(db, `sharedLists/${code}/members`)).then(snap => {
     const members = snap.val() || {};
-    const container = document.getElementById('sharedMembersContainer');
-    if (!container) return;
+    const el = document.getElementById('sharedMembersContainer');
+    if (!el) return;
     let html = '<div class="shared-members">';
     Object.values(members).forEach(m => {
       html += `<div class="member-chip">`;
       if (m.photo) html += `<img src="${esc(m.photo)}" alt="" />`;
       html += `${esc(m.name)}</div>`;
     });
-    html += '</div>';
-    container.innerHTML = html;
+    el.innerHTML = html + '</div>';
   });
 }
 
 function checkShareInvite() {
-  const params = new URLSearchParams(location.search);
-  const joinCode = params.get('join');
-  if (joinCode) {
+  const code = new URLSearchParams(location.search).get('join');
+  if (code) {
     history.replaceState({}, '', location.pathname);
-    joinSharedList(joinCode);
+    joinSharedList(code);
   }
 }
 
@@ -488,9 +521,8 @@ function checkShareInvite() {
 let recognition = null;
 
 function startVoice() {
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) { toast("Voice not supported in this browser"); return; }
-
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { toast("Voice not supported"); return; }
   const btn = document.getElementById('voiceBtn');
 
   if (recognition) {
@@ -500,32 +532,24 @@ function startVoice() {
     return;
   }
 
-  recognition = new SpeechRecognition();
+  recognition = new SR();
   recognition.lang = 'en-US';
   recognition.continuous = false;
   recognition.interimResults = false;
-
   btn.classList.add('listening');
+  haptic('medium');
 
   recognition.onresult = e => {
     const text = e.results[0][0].transcript;
     document.getElementById('itemInput').value = text;
     btn.classList.remove('listening');
     recognition = null;
+    haptic('success');
     toast(`Heard: "${text}"`);
   };
 
-  recognition.onerror = () => {
-    btn.classList.remove('listening');
-    recognition = null;
-    toast("Couldn't hear that. Try again.");
-  };
-
-  recognition.onend = () => {
-    btn.classList.remove('listening');
-    recognition = null;
-  };
-
+  recognition.onerror = () => { btn.classList.remove('listening'); recognition = null; toast("Couldn't hear that"); };
+  recognition.onend = () => { btn.classList.remove('listening'); recognition = null; };
   recognition.start();
 }
 
@@ -535,6 +559,22 @@ function handleSearch(e) {
   renderSuggestions();
 }
 
+// ── Collapsible suggestions ──
+function toggleSuggestions() {
+  suggestionsCollapsed = !suggestionsCollapsed;
+  const content = document.getElementById('suggestionsContent');
+  const toggle = document.getElementById('suggestionsToggle');
+  if (suggestionsCollapsed) {
+    content.classList.add('collapsed');
+    toggle.classList.add('collapsed');
+  } else {
+    content.classList.remove('collapsed');
+    toggle.classList.remove('collapsed');
+  }
+  localStorage.setItem('suggestionsCollapsed', suggestionsCollapsed);
+  haptic('light');
+}
+
 // ── Swipe to delete ──
 function initSwipe(container) {
   let startX, currentX, swiping = false, target = null;
@@ -542,7 +582,7 @@ function initSwipe(container) {
 
   container.addEventListener('touchstart', e => {
     const item = e.target.closest('.active-item');
-    if (!item) return;
+    if (!item || e.target.closest('.check-box') || e.target.closest('.delete-btn')) return;
     startX = e.touches[0].clientX;
     target = item;
     swiping = false;
@@ -575,6 +615,39 @@ function initSwipe(container) {
     target = null;
     swiping = false;
   }, { passive: true });
+}
+
+// ── Long-press to delete ──
+function initLongPress(container) {
+  let timer = null;
+  let pressTarget = null;
+
+  container.addEventListener('touchstart', e => {
+    const item = e.target.closest('.active-item');
+    if (!item || e.target.closest('.check-box') || e.target.closest('.delete-btn')) return;
+    pressTarget = item;
+    timer = setTimeout(() => {
+      haptic('heavy');
+      pressTarget.classList.add('press-hold');
+      const id = pressTarget.dataset.id;
+      const name = pressTarget.querySelector('.item-text')?.textContent || 'this item';
+      if (id && confirm(`Delete "${name}"?`)) {
+        removeItem(id);
+      } else {
+        pressTarget.classList.remove('press-hold');
+      }
+      pressTarget = null;
+    }, 600);
+  }, { passive: true });
+
+  const cancel = () => {
+    clearTimeout(timer);
+    if (pressTarget) pressTarget.classList.remove('press-hold');
+    pressTarget = null;
+  };
+
+  container.addEventListener('touchmove', cancel, { passive: true });
+  container.addEventListener('touchend', cancel, { passive: true });
 }
 
 // ── Rendering ──
@@ -611,10 +684,10 @@ function renderActiveList() {
         <div class="items-grid">`;
 
     items.forEach(item => {
-      const checkedClass = item.checked ? 'checked' : '';
+      const checked = item.checked ? 'checked' : '';
       const qty = item.qty && item.qty > 1 ? `<span class="item-qty">×${item.qty}</span>` : '';
       html += `
-        <div class="item active-item ${checkedClass} adding" data-id="${item.id}">
+        <div class="item active-item ${checked} adding" data-id="${item.id}">
           <div class="swipe-bg">🗑️</div>
           <div class="item-content">
             <div class="check-box ${item.checked ? 'is-checked' : ''}" onclick="window._toggle('${item.id}', ${item.checked})">
@@ -631,10 +704,12 @@ function renderActiveList() {
 
   container.innerHTML = html;
   initSwipe(container);
+  initLongPress(container);
 }
 
 function renderSuggestions() {
-  const container = document.getElementById('suggestionsContainer');
+  const container = document.getElementById('suggestionsInner');
+  const countEl = document.getElementById('suggestionsCountBadge');
   const activeNames = new Set(activeList.map(i => i.name.toLowerCase()));
 
   let candidates = Object.entries(suggestionDB).map(([name, data]) => ({ name, ...data }));
@@ -653,10 +728,12 @@ function renderSuggestions() {
 
   const top = candidates.slice(0, 60);
 
+  if (countEl) countEl.textContent = top.length;
+
   if (top.length === 0) {
     container.innerHTML = searchQuery
       ? `<div class="empty-state"><div class="empty-icon">🔍</div><div>No matches for "${esc(searchQuery)}"</div></div>`
-      : `<div class="empty-state"><div class="empty-icon">💡</div><div>No suggestions yet. Add items to build your smart list.</div></div>`;
+      : `<div class="empty-state"><div class="empty-icon">💡</div><div>No suggestions yet. Add items to build your list.</div></div>`;
     return;
   }
 
@@ -693,38 +770,15 @@ function renderSuggestions() {
 function renderListTabs() {
   const container = document.getElementById('listTabs');
   let html = `<button class="list-tab ${activeListId === 'personal' ? 'active' : ''}" onclick="window._switchList('personal')">My List</button>`;
-
   Object.entries(sharedLists).forEach(([code, info]) => {
     html += `<button class="list-tab ${activeListId === code ? 'active' : ''}" onclick="window._switchList('${code}')">${esc(info.name)}</button>`;
   });
-
   container.innerHTML = html;
 
-  // Show share button for active shared list
   const shareBtn = document.getElementById('shareActiveBtn');
   if (shareBtn) {
     shareBtn.style.display = activeListId !== 'personal' ? 'flex' : 'none';
     shareBtn.onclick = () => openShareModal(activeListId);
-  }
-}
-
-// ── Custom store ──
-function handleStoreChange(select) {
-  if (select.value === 'custom') {
-    const name = prompt('Enter store name:');
-    if (name && name.trim()) {
-      const option = document.createElement('option');
-      option.value = name.trim();
-      option.textContent = name.trim();
-      option.selected = true;
-      select.insertBefore(option, select.querySelector('option[value="custom"]'));
-
-      if (!STORE_ICONS[name.trim()] && currentUser) {
-        update(iconsRef, { [name.trim()]: { emoji: '🛍️', color: '#6b7280' } });
-      }
-    } else {
-      select.value = '';
-    }
   }
 }
 
@@ -735,9 +789,7 @@ window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault();
   deferredPrompt = e;
   const banner = document.getElementById('installBanner');
-  if (banner && !localStorage.getItem('installDismissed')) {
-    banner.style.display = 'flex';
-  }
+  if (banner && !localStorage.getItem('installDismissed')) banner.style.display = 'flex';
 });
 
 function installApp() {
@@ -759,14 +811,19 @@ function dismissInstall() {
 initDarkMode();
 
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js').catch(console.error);
+  navigator.serviceWorker.register('./sw.js').catch(console.error);
 }
 
-// Expose functions for HTML onclick handlers
+// Restore suggestions collapsed state
+suggestionsCollapsed = localStorage.getItem('suggestionsCollapsed') === 'true';
+
+// Expose to window
 window._toggle = toggleItem;
 window._remove = removeItem;
 window._addSuggestion = (name, store) => { addItem(name, store, 1); scrollTo({ top: 0, behavior: 'smooth' }); };
 window._switchList = switchToList;
+window._pickStore = pickStore;
+window._pickCustomStore = pickCustomStore;
 window.login = login;
 window.logout = logout;
 window.togglePhoneLogin = togglePhoneLogin;
@@ -778,35 +835,48 @@ window.startVoice = startVoice;
 window.openShareModal = openShareModal;
 window.closeShareModal = closeShareModal;
 window.createSharedList = createSharedList;
+window.joinSharedList = joinSharedList;
 window.copyShareLink = copyShareLink;
 window.installApp = installApp;
 window.dismissInstall = dismissInstall;
 window.clearChecked = clearChecked;
 window.clearAll = clearAll;
+window.openStorePicker = openStorePicker;
+window.closeStorePicker = closeStorePicker;
+window.toggleSuggestions = toggleSuggestions;
 
-// Form setup
+// ── DOM ready ──
 document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('addForm');
   const itemInput = document.getElementById('itemInput');
-  const storeSelect = document.getElementById('storeSelect');
   const qtyInput = document.getElementById('qtyInput');
   const searchInput = document.getElementById('searchInput');
+  const suggestionsToggle = document.getElementById('suggestionsToggle');
+  const suggestionsContent = document.getElementById('suggestionsContent');
 
   if (form) {
     form.addEventListener('submit', e => {
       e.preventDefault();
-      addItem(itemInput.value, storeSelect.value, qtyInput.value);
+      if (!selectedStore) { toast("Pick a store first"); openStorePicker(); return; }
+      addItem(itemInput.value, selectedStore, qtyInput.value);
       itemInput.value = '';
       qtyInput.value = '1';
       itemInput.focus();
     });
   }
 
-  if (storeSelect) {
-    storeSelect.addEventListener('change', () => handleStoreChange(storeSelect));
+  if (searchInput) searchInput.addEventListener('input', handleSearch);
+
+  if (suggestionsCollapsed && suggestionsToggle && suggestionsContent) {
+    suggestionsContent.classList.add('collapsed');
+    suggestionsToggle.classList.add('collapsed');
   }
 
-  if (searchInput) {
-    searchInput.addEventListener('input', handleSearch);
+  // Close bottom sheet on overlay tap
+  const storeSheet = document.getElementById('storeSheet');
+  if (storeSheet) {
+    storeSheet.addEventListener('click', e => {
+      if (e.target === storeSheet) closeStorePicker();
+    });
   }
 });

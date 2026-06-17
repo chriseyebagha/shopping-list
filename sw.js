@@ -1,11 +1,11 @@
-const CACHE_NAME = 'shoplist-v2';
+const CACHE_NAME = 'shoplist-v2.1';
 const ASSETS = [
-  '/',
-  '/index.html',
-  '/css/style.css',
-  '/js/app.js',
-  '/manifest.json',
-  '/icons/icon.svg'
+  './',
+  './index.html',
+  './css/style.css',
+  './js/app.js',
+  './manifest.json',
+  './icons/icon.svg'
 ];
 
 self.addEventListener('install', e => {

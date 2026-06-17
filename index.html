@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
   <title>Shopping List</title>
-  <meta name="description" content="Your smart, learning shopping companion. Add items, track by store, and share lists in real-time." />
+  <meta name="description" content="Your smart, learning shopping companion" />
   <meta name="theme-color" content="#e67e22" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -17,7 +17,7 @@
 </head>
 <body>
 
-  <!-- Login Overlay -->
+  <!-- Login -->
   <div id="loginOverlay">
     <div class="login-box">
       <h1>Shopping List</h1>
@@ -27,14 +27,10 @@
           <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#fff" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#fff" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.836.86-3.048.86-2.344 0-4.328-1.584-5.036-3.715H.957v2.332A8.997 8.997 0 0 0 9 18z" opacity=".3"/><path fill="#fff" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" opacity=".5"/><path fill="#fff" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.159 6.656 3.58 9 3.58z" opacity=".3"/></svg>
           Sign in with Google
         </button>
-        <button class="auth-btn phone" onclick="togglePhoneLogin()">
-          📱 Sign in with Phone
-        </button>
+        <button class="auth-btn phone" onclick="togglePhoneLogin()">📱 Sign in with Phone</button>
       </div>
-
-      <!-- Phone auth flow -->
       <div id="phoneFlow" class="phone-flow">
-        <p style="font-size:0.85rem;color:var(--text-secondary)">Enter phone number (e.g. +15551234567)</p>
+        <p style="font-size:0.88rem;color:var(--text-secondary)">Enter phone number (e.g. +15551234567)</p>
         <input type="tel" id="phoneInput" placeholder="+1..." />
         <div id="recaptcha-container"></div>
         <button id="sendCodeBtn" class="auth-btn google" onclick="sendCode()">Send SMS Code</button>
@@ -47,27 +43,27 @@
     </div>
   </div>
 
-  <!-- Top bar -->
+  <!-- Top bar (sticky) -->
   <div id="topBar" class="top-bar hidden">
     <div id="userDisplay" class="user-info"></div>
     <div class="top-bar-actions">
-      <button class="icon-btn" onclick="openShareModal()" title="Share list">
+      <button class="icon-btn" onclick="openShareModal()" title="Share">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
       </button>
-      <button id="shareActiveBtn" class="icon-btn" style="display:none" title="Invite to this list">
+      <button id="shareActiveBtn" class="icon-btn" style="display:none" title="Invite">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
       </button>
-      <button class="icon-btn" onclick="toggleDarkMode()" title="Toggle dark mode">
+      <button class="icon-btn" onclick="toggleDarkMode()" title="Dark mode">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
       </button>
       <button class="logout-btn" onclick="logout()">Sign Out</button>
     </div>
   </div>
 
-  <!-- Main app -->
+  <!-- App -->
   <div id="app" class="hidden">
 
-    <!-- PWA install banner -->
+    <!-- Install banner -->
     <div id="installBanner" class="install-banner" onclick="installApp()">
       <div>
         <div class="install-text">Install Shopping List</div>
@@ -82,33 +78,23 @@
       <p>Your smart, learning shopping companion</p>
     </div>
 
-    <!-- List tabs (personal + shared) -->
+    <!-- List tabs -->
     <div id="listTabs" class="list-mode-bar"></div>
 
-    <!-- Add item section -->
+    <!-- Sticky add section -->
     <div class="add-section">
       <h3>Add Item</h3>
       <form id="addForm" class="add-form">
         <div class="add-row">
           <input type="text" id="itemInput" name="item" placeholder="e.g. Milk, Batteries..." required autocomplete="off" />
-          <select id="storeSelect" required>
-            <option value="">Store...</option>
-            <option value="Trader Joe's">Trader Joe's</option>
-            <option value="Whole Foods">Whole Foods</option>
-            <option value="Costco">Costco</option>
-            <option value="Safeway">Safeway</option>
-            <option value="Target">Target</option>
-            <option value="TJ Maxx">TJ Maxx</option>
-            <option value="Amazon">Amazon</option>
-            <option value="IKEA">IKEA</option>
-            <option value="General">General</option>
-            <option value="custom">+ New Store...</option>
-          </select>
+          <button type="button" id="storePickerBtn" class="store-picker-btn" onclick="openStorePicker()">
+            Store... <span class="chevron">▼</span>
+          </button>
         </div>
         <div class="add-row-bottom">
           <input type="number" id="qtyInput" name="qty" value="1" min="1" max="99" />
-          <button type="button" id="voiceBtn" class="voice-btn" onclick="startVoice()" title="Voice input">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+          <button type="button" id="voiceBtn" class="voice-btn" onclick="startVoice()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
           </button>
           <button type="submit" class="submit-btn">Add to List</button>
         </div>
@@ -124,22 +110,38 @@
       <button class="danger" onclick="clearAll()">Reset List</button>
     </div>
 
-    <!-- Divider -->
-    <div class="divider"><span>Suggested For You</span></div>
+    <!-- Divider + collapsible suggestions -->
+    <div class="divider"><span>Suggestions</span></div>
 
-    <!-- Search -->
-    <div class="search-bar">
-      <span class="search-icon">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      </span>
-      <input type="text" id="searchInput" placeholder="Search suggestions..." />
+    <div class="suggestions-header">
+      <button id="suggestionsToggle" class="suggestions-toggle" onclick="toggleSuggestions()">
+        <svg class="toggle-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        Suggested Items
+      </button>
+      <span id="suggestionsCountBadge" class="suggestions-count">0</span>
     </div>
 
-    <!-- Suggestions -->
-    <div id="suggestionsContainer"></div>
+    <div id="suggestionsContent">
+      <!-- Search -->
+      <div class="search-bar">
+        <span class="search-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </span>
+        <input type="text" id="searchInput" placeholder="Search suggestions..." />
+      </div>
+      <div id="suggestionsInner"></div>
+    </div>
 
-    <!-- Footer -->
-    <div class="footer">Shopping List v2.0</div>
+    <div class="footer">Shopping List v2.1</div>
+  </div>
+
+  <!-- Store picker bottom sheet -->
+  <div id="storeSheet" class="bottom-sheet-overlay" onclick="if(event.target===this)closeStorePicker()">
+    <div class="bottom-sheet">
+      <div class="bottom-sheet-handle"></div>
+      <h3>Pick a Store</h3>
+      <div id="storeGridContainer"></div>
+    </div>
   </div>
 
   <!-- Share modal -->
