@@ -931,6 +931,7 @@ body.dark .btn-login.phone { background: rgba(255,255,255,0.06); }
   bottom: calc(var(--input-bar-h) + 16px + var(--safe-bottom));
   left: 50%;
   transform: translateX(-50%) translateY(80px);
+  opacity: 0;
   background: var(--text);
   color: var(--bg);
   padding: 10px 22px;
@@ -938,13 +939,13 @@ body.dark .btn-login.phone { background: rgba(255,255,255,0.06); }
   font-size: 0.85rem;
   font-weight: 600;
   z-index: 2000;
-  transition: transform 0.3s var(--bounce);
+  transition: transform 0.3s var(--bounce), opacity 0.3s var(--ease);
   box-shadow: 0 8px 24px rgba(0,0,0,0.15);
   pointer-events: none;
   white-space: nowrap;
 }
 
-.toast.show { transform: translateX(-50%) translateY(0); }
+.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 
 /* ── Pull-to-refresh ── */
 .pull-indicator {

@@ -513,7 +513,6 @@ function showAutocomplete(query) {
     const cat = itemCategory(item);
     const info = CATEGORIES[cat] || CATEGORIES['Other'];
     return `<div class="ac-item" data-name="${esc(item.name)}">
-      <span class="ac-emoji">${info.emoji}</span>
       <span class="ac-name">${esc(item.name)}</span>
       <span class="ac-cat">${esc(cat)}</span>
       <span class="ac-add">+</span>
@@ -577,9 +576,8 @@ function render() {
   if (total === 0) {
     area.innerHTML = `
       <div class="empty-state">
-        <div class="empty-emoji">🛒</div>
         <div class="empty-title">What do you need?</div>
-        <div class="empty-sub">Type below to start your list. We'll organize everything for you.</div>
+        <div class="empty-sub">Type below to start adding items</div>
       </div>
       ${renderSuggestions()}`;
     return;
@@ -601,7 +599,6 @@ function render() {
     const info = CATEGORIES[cat];
     html += `<div class="cat-section">
       <div class="cat-header">
-        <span class="cat-emoji">${info.emoji}</span>
         <span class="cat-label">${esc(cat)}</span>
       </div>`;
     byCat[cat].forEach(item => { html += renderItem(item); });
@@ -658,7 +655,7 @@ function renderSuggestions() {
   const chips = candidates.map(item => {
     const cat = itemCategory(item);
     const info = CATEGORIES[cat] || CATEGORIES['Other'];
-    return `<button class="sug-chip" onclick="window._addSug('${item.name.replace(/'/g, "\\'")}')">${info.emoji} ${esc(item.name)} <span class="plus">+</span></button>`;
+    return `<button class="sug-chip" onclick="window._addSug('${item.name.replace(/'/g, "\\'")}')">${esc(item.name)} <span class="plus">+</span></button>`;
   }).join('');
 
   return `<div class="suggestions-section">
