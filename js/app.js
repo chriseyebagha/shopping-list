@@ -67,6 +67,39 @@ for (const cat of Object.keys(KEYWORD_MAP)) {
   KEYWORD_MAP[cat].sort((a, b) => b.length - a.length);
 }
 
+// ── Name normalization (strip brands & descriptors) ──
+const BRANDS = ['kirkland signature','kirkland','great value','store brand','organic valley','horizon','simply','tropicana','minute maid','dole','del monte','green giant','birds eye','tyson','perdue','oscar mayer','boars head','sara lee','pepperidge farm','pillsbury','betty crocker','kraft','heinz','hellmanns','best foods','jif','skippy','smuckers','welchs','kelloggs','general mills','post','quaker','nature valley','clif','kind','rxbar','larabar','cascadian farm','annies','amys','trader joes','whole foods','365','signature select','open nature','o organics','lucerne','safeway','publix','wegmans','market pantry','good gather','favorite day',"member's mark","sam's choice"];
+BRANDS.sort((a, b) => b.length - a.length);
+
+const DESCRIPTORS = ['wild raw','wild caught','farm raised','free range','cage free','grass fed','boneless skinless','bone-in','skin-on','extra large','all natural','100%','usda choice','usda prime','usda select','premium','select','choice','prime','natural','organic','fresh','raw','cooked','jumbo','large','medium','small','argentinian','argentine','norwegian','atlantic','pacific','alaskan','italian','thai','indian','japanese','mexican','red','green','yellow','white','whole','sliced','diced','chopped','shredded','mini','baby'];
+DESCRIPTORS.sort((a, b) => b.length - a.length);
+
+function normalizeName(raw) {
+  let name = raw.trim();
+  if (!name) return name;
+  let lower = name.toLowerCase();
+
+  for (const brand of BRANDS) {
+    if (lower.startsWith(brand + ' ')) {
+      name = name.substring(brand.length).trim();
+      lower = name.toLowerCase();
+      break;
+    }
+  }
+
+  let cleaned = name;
+  for (const desc of DESCRIPTORS) {
+    const re = new RegExp(`\\b${desc.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b\\s*`, 'gi');
+    cleaned = cleaned.replace(re, '');
+  }
+  cleaned = cleaned.replace(/\s+/g, ' ').trim();
+
+  if (!cleaned) cleaned = name;
+
+  cleaned = cleaned.replace(/\b\w/g, c => c.toUpperCase());
+  return cleaned;
+}
+
 function autoCategory(name) {
   const lower = name.toLowerCase();
   let best = null, bestLen = 0;
@@ -152,9 +185,28 @@ function haptic(style) {
 function toast(msg) {
   const el = document.getElementById('toast');
   el.textContent = msg;
+  el.onclick = null;
+  el.style.cursor = '';
   el.classList.add('show');
   clearTimeout(el._t);
   el._t = setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+function toastUndo(msg, onUndo) {
+  const el = document.getElementById('toast');
+  el.innerHTML = `${esc(msg)} <span style="margin-left:12px;text-decoration:underline;font-weight:700;cursor:pointer">Undo</span>`;
+  el.style.cursor = 'pointer';
+  el.onclick = (e) => {
+    e.stopPropagation();
+    el.classList.remove('show');
+    el.onclick = null;
+    el.style.cursor = '';
+    clearTimeout(el._t);
+    onUndo();
+  };
+  el.classList.add('show');
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.classList.remove('show'); el.onclick = null; el.style.cursor = ''; }, 4000);
 }
 
 // ── Dark mode ──
@@ -256,8 +308,12 @@ function setupListeners() {
   });
   onValue(suggestionsRef, snap => {
     const data = snap.val();
-    if (data) suggestionDB = data;
-    else seedDatabase();
+    if (data) {
+      suggestionDB = data;
+      cleanSuggestionDB();
+    } else {
+      seedDatabase();
+    }
     render();
   });
 }
@@ -270,10 +326,51 @@ function seedDatabase() {
   update(suggestionsRef, updates);
 }
 
+function cleanSuggestionDB() {
+  const cleaned = localStorage.getItem('sugCleaned');
+  if (cleaned === 'v2') return;
+
+  const updates = {};
+  const merged = {};
+
+  for (const [rawName, data] of Object.entries(suggestionDB)) {
+    const normalized = normalizeName(rawName);
+    const key = normalized.toLowerCase();
+
+    if (normalized !== rawName) {
+      updates[rawName] = null;
+    }
+
+    if (merged[key]) {
+      merged[key].count = Math.max(merged[key].count || 0, data.count || 0);
+      merged[key].lastUsed = Math.max(merged[key].lastUsed || 0, data.lastUsed || 0);
+      if (merged[key].name !== normalized) {
+        updates[merged[key].name] = null;
+      }
+      merged[key].name = normalized;
+    } else {
+      merged[key] = { ...data, name: normalized };
+    }
+  }
+
+  for (const entry of Object.values(merged)) {
+    updates[entry.name] = { category: entry.category || autoCategory(entry.name), count: entry.count || 1, lastUsed: entry.lastUsed || Date.now() };
+  }
+
+  if (Object.keys(updates).some(k => updates[k] === null)) {
+    update(suggestionsRef, updates).then(() => {
+      localStorage.setItem('sugCleaned', 'v2');
+    });
+  } else {
+    localStorage.setItem('sugCleaned', 'v2');
+  }
+}
+
 // ── CRUD (Doherty Threshold — optimistic, instant UI) ──
 function addItem(name, qty) {
   if (!currentUser || !name.trim()) return;
-  name = name.trim();
+  name = normalizeName(name);
+  if (!name) return;
   const category = autoCategory(name);
   qty = Math.max(1, parseInt(qty) || 1);
 
@@ -295,15 +392,36 @@ function addItem(name, qty) {
   toast(`Added ${name}`);
 }
 
+let pendingUndo = null;
+
 function removeItem(id) {
   if (!currentUser) return;
   haptic('medium');
+
+  const item = activeList.find(i => i.id === id);
   const el = document.querySelector(`[data-id="${id}"]`);
   if (el) {
     el.classList.add('removing');
     setTimeout(() => doRemove(id), 280);
   } else {
     doRemove(id);
+  }
+
+  if (item) {
+    if (pendingUndo) clearTimeout(pendingUndo.timer);
+    const listId = activeListId;
+    pendingUndo = {
+      item,
+      listId,
+      timer: setTimeout(() => { pendingUndo = null; }, 4000)
+    };
+    toastUndo(`Deleted "${item.name}"`, () => {
+      clearTimeout(pendingUndo.timer);
+      pendingUndo = null;
+      const targetRef = listId === 'personal' ? listRef : ref(db, `sharedLists/${listId}/items`);
+      push(targetRef, { name: item.name, category: item.category, qty: item.qty || 1, checked: item.checked || false });
+      haptic('success');
+    });
   }
 }
 
@@ -644,10 +762,17 @@ function renderItem(item) {
 
 function renderSuggestions() {
   const activeNames = new Set(activeList.map(i => i.name.toLowerCase()));
+  const now = Date.now();
   let candidates = Object.entries(suggestionDB)
     .map(([name, data]) => ({ name, ...data }))
     .filter(i => !activeNames.has(i.name.toLowerCase()))
-    .sort((a, b) => (b.count || 0) - (a.count || 0))
+    .sort((a, b) => {
+      const aRecency = Math.max(0, 1 - (now - (a.lastUsed || 0)) / (30 * 86400000));
+      const bRecency = Math.max(0, 1 - (now - (b.lastUsed || 0)) / (30 * 86400000));
+      const aScore = (a.count || 0) + aRecency * 10;
+      const bScore = (b.count || 0) + bRecency * 10;
+      return bScore - aScore;
+    })
     .slice(0, 30);
 
   if (candidates.length === 0) return '';
